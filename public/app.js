@@ -843,8 +843,10 @@ export function toggleTheme() {
     applyTheme(next); store.set('qadam-theme', next);
     document.querySelectorAll('[data-theme-toggle]').forEach(b => { b.innerHTML = icon(next === 'dark' ? 'sun' : 'moon'); });
   };
-  if (document.startViewTransition && !matchMedia('(prefers-reduced-motion: reduce)').matches) document.startViewTransition(swap);
-  else swap();
+  if (document.startViewTransition && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    const vt = document.startViewTransition(swap);
+    vt.ready.catch(() => {}); vt.finished.catch(() => {});  // браузер может отменить плавную смену — тема всё равно сменится
+  } else swap();
 }
 
 // Шапка, подвал и нижняя панель рисуются сразу (из настроек, сохранённых на прошлой странице),

@@ -649,9 +649,7 @@ details.qa .a { padding: 0 0 18px; color: var(--ink-2); max-width: 75ch; }
    Движение. Всё читается и без анимаций: эффекты только украшают,
    а при системной настройке «уменьшить движение» отключаются целиком.
    ============================================================ */
-@view-transition { navigation: auto; }
 ::view-transition-old(root), ::view-transition-new(root) { animation-duration: .28s; }
-.site-header { view-transition-name: site-header; }
 
 @keyframes q-rise { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: none; } }
 @keyframes q-fade { from { opacity: 0; } to { opacity: 1; } }

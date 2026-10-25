@@ -1,8 +1,11 @@
 # Qadam — сайт агентства недвижимости и оценки (подпроект в папке realty/)
 
 Отдельный от «Табеля» проект, лежит в этом же репозитории. Сайт табеля (корневой `public/`) он не трогает.
-Хостинг — **Cloudflare Pages** из этого репозитория (Build output directory: `realty/public`, заголовки — `public/_headers`).
-Netlify для этого проекта не нужен и не используется.
+Живой сайт: **https://qadam-realty.imakanovr.workers.dev** — Cloudflare Worker `qadam-realty`
+(аккаунт `3257b22ca5a38019c74864b01be83b81`), статические файлы из `public/`, код воркера — `worker.js`.
+Выкладка — через коннектор Cloudflare (mcp.cloudflare.com, нужны права Workers Scripts Write) и `tools/cf-deploy.mjs`,
+порядок шагов — в README («Хостинг»). Netlify для этого проекта не нужен и не используется.
+Автоматические переходы между страницами (`@view-transition`) не включать: на хостинге Chrome их отменяет с ошибкой в консоли.
 
 ## Стек и правила
 - Supabase-проект **realty-agency** (`feuqorxannlztgxgdwyz`) на аккаунте, к которому подключён коннектор Supabase.

@@ -58,14 +58,17 @@ finratings.kz, inform.kz, zakon.kz, tengrinews.kz, kapital.kz, nur.kz):
 Пока поля пустые, сайт работает в **демо-режиме** на `data/demo.json`: всё кликается, заявки и правки
 сохраняются только в браузере.
 
-### 3. Хостинг (Cloudflare Pages)
+### 3. Хостинг (Cloudflare)
 
-Один раз подключить репозиторий, после этого каждый `git push` в выбранную ветку сам выкладывает сайт:
-Cloudflare → Workers & Pages → Create → Pages → Connect to Git → `Ruslan-Imakanov/tabel` →
-Production branch: `main` (или рабочая ветка) → Framework preset: None, Build command: пусто,
-**Build output directory: `realty/public`**. Заголовки берутся из `public/_headers`.
+Сайт опубликован: **https://qadam-realty.imakanovr.workers.dev** — Cloudflare Worker `qadam-realty`
+со статическими файлами из `public/` (код воркера — `worker.js`, заголовки — `public/_headers`).
+Отдельный сайт, к «Табелю» не относится.
 
-Это отдельный сайт, к «Табелю» не относится.
+Обновление (так делает Claude через коннектор Cloudflare; вручную — те же запросы через curl с API-токеном):
+1. `node tools/cf-deploy.mjs manifest public` → POST `/accounts/{id}/workers/scripts/qadam-realty/assets-upload-session`.
+2. `node tools/cf-deploy.mjs upload public <jwt-файл> '<buckets>'` — загружает только изменившиеся файлы.
+3. PUT `/accounts/{id}/workers/scripts/qadam-realty` (multipart: metadata + `worker.js`) с полученным jwt и
+   `assets.config = { html_handling: "none", not_found_handling: "404-page", _headers: <содержимое public/_headers> }`.
 
 Локально: `cd realty/public && python3 -m http.server 8080` → http://localhost:8080.
 
