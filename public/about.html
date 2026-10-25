@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="claude:viewport-fit-sides" content="cover">
+<title>О компании и контакты · Qadam</title>
+<meta name="description" content="Команда агентства недвижимости и оценки, контакты, адрес офиса, отзывы клиентов.">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Unbounded:wght@500;600;700&display=swap">
+<link rel="stylesheet" href="styles.css">
+<style>
+  .team { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; }
+  .member { display: flex; flex-direction: column; gap: 12px; }
+  .member .row { flex-wrap: nowrap; }
+  .contact-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr); gap: 32px; align-items: start; }
+  @media (max-width: 900px) { .contact-grid { grid-template-columns: minmax(0, 1fr); } }
+  .contact-list { display: flex; flex-direction: column; }
+  .contact-list .pr { display: grid; grid-template-columns: 120px minmax(0, 1fr); gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--line); }
+  .contact-list dt { font: 500 var(--fs-xs)/1.6 var(--font-mono); text-transform: uppercase; letter-spacing: .06em; color: var(--ink-3); }
+  .contact-list dd { margin: 0; overflow-wrap: anywhere; }
+  .stars-input { display: flex; gap: 4px; }
+  .stars-input button { border: 0; background: none; padding: 2px; cursor: pointer; color: var(--line-strong); }
+  .stars-input button svg { width: 26px; height: 26px; }
+  .stars-input button[aria-pressed="true"] { color: var(--gold); }
+  .stars-input button[aria-pressed="true"] svg { fill: currentColor; }
+  .stars { color: var(--gold); display: flex; gap: 2px; }
+  .stars svg { width: 16px; height: 16px; fill: currentColor; }
+</style>
+</head>
+<body data-page="about">
+<header id="site-header"></header>
+<main>
+  <section class="page-head">
+    <div class="wrap">
+      <nav class="crumbs" aria-label="Навигация"><a href="index.html">Главная</a><span>/</span><span>О компании</span></nav>
+      <h1 id="name">О компании</h1>
+      <p id="about"></p>
+    </div>
+  </section>
+
+  <section class="section tight">
+    <div class="wrap contact-grid">
+      <div class="stack">
+        <span class="eyebrow accent">Контакты</span>
+        <dl class="contact-list" id="contacts"></dl>
+        <div class="row" id="contact-btns"></div>
+      </div>
+      <div class="stack">
+        <div class="map-box" id="map"></div>
+        <p class="form-note" id="map-note"></p>
+      </div>
+    </div>
+  </section>
+
+  <section class="section band">
+    <div class="wrap">
+      <div class="section-head"><div class="titles"><span class="eyebrow">Команда</span><h2>Кто будет вести вашу сделку</h2></div></div>
+      <div class="team" id="team"></div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap grid g2" style="gap:40px;align-items:start">
+      <div class="stack">
+        <span class="eyebrow">Отзывы</span><h2>Что говорят клиенты</h2>
+        <div class="stack" id="reviews"></div>
+      </div>
+      <form class="panel-box form-grid" id="review" novalidate>
+        <div class="full stack" style="gap:6px"><span class="eyebrow accent">Ваш отзыв</span><h3>Расскажите, как всё прошло</h3><p class="small muted">Отзыв появится на сайте после проверки модератором.</p></div>
+        <div class="field full"><span class="label">Оценка</span><div class="stars-input" id="stars"></div></div>
+        <div class="field"><label for="r-name">Имя *</label><input class="input" id="r-name" autocomplete="name"></div>
+        <div class="field"><label for="r-svc">Услуга</label><select class="input" id="r-svc"><option value="">Не указывать</option><option>Покупка</option><option>Продажа</option><option>Аренда</option><option>Оценка</option><option>Ипотека</option><option>Юридическое сопровождение</option></select></div>
+        <div class="field full"><label for="r-text">Отзыв *</label><textarea class="input" id="r-text" rows="4"></textarea></div>
+        <p class="error-text full" id="r-err" hidden></p>
+        <div class="full"><button class="btn" type="submit">Отправить отзыв</button></div>
+      </form>
+    </div>
+  </section>
+
+  <section class="section band">
+    <div class="wrap grid g2" style="gap:32px;align-items:center">
+      <div class="stack"><span class="eyebrow">Работа у нас</span><h2>Ищем агентов и оценщиков</h2>
+        <p class="muted">Обучение, база объектов, юрист и оценщик в команде, прозрачные проценты от сделок.</p></div>
+      <div><button class="btn lg" type="button" data-lead="other" data-title="Хочу работать в агентстве" data-subtitle="Расскажите о своём опыте">Откликнуться</button></div>
+    </div>
+  </section>
+</main>
+<footer id="site-footer"></footer>
+<script type="module">
+import { boot, db, esc, icon, phoneDigits, waLink, makeMap, toast, errText } from './app.js';
+boot(async (s) => {
+  const $ = id => document.getElementById(id);
+  const c = s.contacts, co = s.company;
+  $('name').textContent = co.name ? `${co.name} — ${co.tagline || 'недвижимость и оценка'}` : 'О компании';
+  $('about').textContent = co.about || co.slogan || '';
+  const [agents, reviews] = await Promise.all([
+    db.list('agents', { eq: { is_active: true }, order: 'sort' }),
+    db.list('reviews', { eq: { is_published: true }, order: ['created_at', 'desc'] })
+  ]);
+  const rows = [
+    ['Телефон', c.phone && `<a class="mono" href="tel:+${phoneDigits(c.phone)}">${esc(c.phone)}</a>`],
+    ['WhatsApp', c.whatsapp && `<a href="${waLink(c.whatsapp)}" target="_blank" rel="noopener">+${esc(phoneDigits(c.whatsapp))}</a>`],
+    ['Telegram', c.telegram && `<a href="https://t.me/${esc(c.telegram.replace(/^@/, ''))}" target="_blank" rel="noopener">${esc(c.telegram)}</a>`],
+    ['E-mail', c.email && `<a href="mailto:${esc(c.email)}">${esc(c.email)}</a>`],
+    ['Адрес', c.address && esc(c.address)],
+    ['Часы работы', c.hours && esc(c.hours)],
+    ['Компания', co.legal_name && esc(co.legal_name)],
+    ['БИН', co.bin && `<span class="mono">${esc(co.bin)}</span>`],
+    ['Оценка', co.appraiser_note && `<span class="small">${esc(co.appraiser_note)}</span>`]
+  ].filter(([, v]) => v);
+  $('contacts').innerHTML = rows.map(([k, v]) => `<div class="pr"><dt>${k}</dt><dd>${v}</dd></div>`).join('');
+  $('contact-btns').innerHTML = `${c.phone ? `<a class="btn" href="tel:+${phoneDigits(c.phone)}">${icon('phone')} Позвонить</a>` : ''}
+    ${c.whatsapp ? `<a class="btn ghost" href="${waLink(c.whatsapp, 'Здравствуйте!')}" target="_blank" rel="noopener">${icon('whatsapp')} WhatsApp</a>` : ''}
+    ${c.two_gis_url ? `<a class="btn ghost" href="${esc(c.two_gis_url)}" target="_blank" rel="noopener">${icon('map')} 2GIS</a>` : ''}
+    <button class="btn ghost" type="button" data-lead="consult" data-title="Записаться на встречу в офисе">Записаться на встречу</button>`;
+  if (c.lat && c.lng) {
+    makeMap($('map'), { lat: c.lat, lng: c.lng, zoom: 15 }).then(({ L, map }) => {
+      L.marker([c.lat, c.lng], { icon: L.divIcon({ className: 'pin-wrap', html: `<span class="price-pin">${esc(co.name)}</span>`, iconSize: [0, 0] }) }).addTo(map);
+    }).catch(() => { $('map').hidden = true; });
+    $('map-note').textContent = c.address || '';
+  } else $('map').hidden = true;
+
+  $('team').innerHTML = agents.map(a => `<div class="panel-box member">
+    <div class="row" style="gap:14px"><div class="avatar lg">${a.photo_url ? `<img src="${esc(a.photo_url)}" alt="">` : esc(a.full_name.split(' ').map(w => w[0]).join('').slice(0, 2))}</div>
+      <div><b>${esc(a.full_name)}</b> ${a.is_demo ? '<span class="badge demo">демо</span>' : ''}<div class="small muted">${esc(a.position || '')}</div>
+      ${a.experience_years ? `<div class="xs mono" style="color:var(--ink-3)">опыт ${a.experience_years} ${a.experience_years % 10 === 1 && a.experience_years !== 11 ? 'год' : a.experience_years % 10 >= 2 && a.experience_years % 10 <= 4 && (a.experience_years < 10 || a.experience_years > 20) ? 'года' : 'лет'}</div>` : ''}</div></div>
+    ${a.specialization ? `<p class="small"><b>Специализация:</b> ${esc(a.specialization)}</p>` : ''}
+    ${a.bio ? `<p class="small muted">${esc(a.bio)}</p>` : ''}
+    ${a.certificates ? `<p class="xs muted">${esc(a.certificates)}</p>` : ''}
+    <div class="row">${a.phone ? `<a class="btn ghost sm" href="tel:+${phoneDigits(a.phone)}">${icon('phone')} ${esc(a.phone)}</a>` : ''}${a.whatsapp ? `<a class="btn ghost sm" href="${waLink(a.whatsapp)}" target="_blank" rel="noopener">${icon('whatsapp')}</a>` : ''}</div>
+  </div>`).join('') || '<p class="muted">Команда появится после заполнения в админке.</p>';
+
+  const star = icon('star');
+  $('reviews').innerHTML = reviews.length ? reviews.map(r => `<div class="panel-box stack" style="gap:8px">
+      <div class="stars" aria-label="Оценка ${r.rating} из 5">${star.repeat(r.rating)}</div><p>${esc(r.text)}</p>
+      <span class="small muted">${esc(r.author)}${r.service ? ' · ' + esc(r.service) : ''} · ${new Date(r.created_at).toLocaleDateString('ru-RU')}</span>
+      ${r.reply ? `<div class="callout"><b>Ответ агентства:</b> ${esc(r.reply)}</div>` : ''}</div>`).join('')
+    : '<div class="empty"><p>Пока нет опубликованных отзывов. Будьте первым — форма справа.</p></div>';
+
+  let rating = 5;
+  const renderStars = () => { $('stars').innerHTML = [1, 2, 3, 4, 5].map(i => `<button type="button" data-r="${i}" aria-pressed="${i <= rating}" aria-label="${i} из 5">${star}</button>`).join(''); };
+  renderStars();
+  $('stars').addEventListener('click', e => { const b = e.target.closest('[data-r]'); if (b) { rating = Number(b.dataset.r); renderStars(); } });
+  $('review').addEventListener('submit', async e => {
+    e.preventDefault();
+    const err = $('r-err'); err.hidden = true;
+    if (!$('r-name').value.trim() || $('r-text').value.trim().length < 10) { err.textContent = 'Укажите имя и напишите отзыв хотя бы в пару предложений.'; err.hidden = false; return; }
+    try {
+      await db.insert('reviews', { author: $('r-name').value.trim(), text: $('r-text').value.trim(), rating, service: $('r-svc').value || null, is_published: false }, { returning: false });
+      $('review').innerHTML = `<div class="success-state full"><div class="tick">${icon('check')}</div><h3>Спасибо за отзыв</h3><p class="muted">Он появится на сайте после проверки.</p></div>`;
+    } catch (ex) { err.textContent = errText(ex); err.hidden = false; }
+  });
+  if (location.hash === '#review') setTimeout(() => $('review').scrollIntoView(), 30);
+});
+</script>
+</body>
+</html>

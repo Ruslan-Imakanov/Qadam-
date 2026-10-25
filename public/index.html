@@ -1,0 +1,383 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="claude:viewport-fit-sides" content="cover">
+<title>Агентство Qadam</title>
+<meta name="description" content="Купля-продажа и аренда недвижимости в Казахстане, юридическое сопровождение сделок, ипотечный брокер и независимая оценка движимого и недвижимого имущества.">
+<meta property="og:title" content="Qadam — недвижимость и оценка">
+<meta property="og:description" content="Купить, продать, сдать и оценить — в одном окне.">
+<meta property="og:type" content="website">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Unbounded:wght@500;600;700&display=swap">
+<link rel="stylesheet" href="styles.css">
+<style>
+  .hero-plan .plan-frame { aspect-ratio: 4 / 3; max-width: 100%; border: 1px solid var(--line); border-radius: var(--r-lg); overflow: hidden; background: var(--plan-fill); }
+  .hero-plan .est {
+    position: absolute; right: -14px; top: -18px; background: var(--surface); border: 1px solid var(--line);
+    border-radius: var(--r-md); box-shadow: var(--shadow); padding: 12px 14px; display: flex; flex-direction: column; gap: 2px;
+    text-decoration: none; color: var(--ink);
+  }
+  .hero-plan .est b { font: 600 var(--fs-lg)/1.2 var(--font-mono); }
+  .hero-plan .est:hover { border-color: var(--accent); color: var(--ink); }
+  .val-band { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr); gap: 32px; align-items: start; }
+  .val-cats { display: flex; flex-direction: column; border-top: 1px solid var(--line-strong); }
+  .val-cat { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 16px; padding: 14px 0; border-bottom: 1px solid var(--line); text-decoration: none; color: var(--ink); }
+  .val-cat:hover { color: var(--accent); }
+  .val-cat .t { font-weight: 600; }
+  .val-cat .list { grid-column: 1 / -1; font-size: var(--fs-sm); color: var(--ink-2); }
+  .val-cat .from { font: 500 var(--fs-sm)/1.4 var(--font-mono); color: var(--accent); white-space: nowrap; }
+  .mini-calc { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)) minmax(0, 1.3fr); gap: 12px; align-items: end; }
+  .mini-calc .out { background: var(--ink); color: var(--bg); border-radius: var(--r-md); padding: 12px 16px; min-height: 44px; display: flex; flex-direction: column; justify-content: center; }
+  .mini-calc .out b { font: 600 var(--fs-lg)/1.2 var(--font-mono); }
+  .mini-calc .out span { font-size: var(--fs-xs); opacity: .75; }
+  .review { display: flex; flex-direction: column; gap: 10px; }
+  .stars { color: var(--gold); display: flex; gap: 2px; }
+  .stars svg { width: 16px; height: 16px; fill: currentColor; }
+  .cta-band { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 32px; align-items: center; }
+  @media (max-width: 900px) {
+    .val-band, .cta-band { grid-template-columns: minmax(0, 1fr); }
+    .mini-calc { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .mini-calc .out { grid-column: 1 / -1; }
+  }
+</style>
+</head>
+<body data-page="home">
+<header id="site-header"></header>
+<main>
+  <section class="hero">
+    <div class="wrap">
+      <div class="hero-copy">
+        <span class="eyebrow accent">Агентство недвижимости и оценочная компания · Казахстан</span>
+        <h1 id="hero-title">Недвижимость и оценка имущества в Казахстане</h1>
+        <p class="lead" id="hero-sub">Подберём, продадим или сдадим объект, проверим документы и проведём сделку. Оценим квартиру, дом, автомобиль, оборудование и бизнес для банка, нотариуса или суда.</p>
+        <div class="search-panel">
+          <div class="tabs" role="tablist" aria-label="Что вы хотите сделать">
+            <button class="tab" role="tab" aria-selected="true" data-mode="sale">Купить</button>
+            <button class="tab" role="tab" aria-selected="false" data-mode="rent">Снять</button>
+            <button class="tab" role="tab" aria-selected="false" data-mode="value">Оценить</button>
+            <button class="tab" role="tab" aria-selected="false" data-mode="sell">Продать или сдать</button>
+          </div>
+          <form class="search-form" id="search-form" autocomplete="off">
+            <div class="field" data-for="sale rent"><label for="s-type">Тип</label><select class="input" id="s-type"></select></div>
+            <div class="field" data-for="value"><label for="s-vkind">Что оценить</label>
+              <select class="input" id="s-vkind">
+                <option value="apartment">Квартира</option><option value="house">Дом, дача</option><option value="land">Земельный участок</option>
+                <option value="commercial">Коммерческая недвижимость</option><option value="auto">Автомобиль</option><option value="equipment">Оборудование</option>
+              </select></div>
+            <div class="field" data-for="sell"><label for="s-skind">Объект</label>
+              <select class="input" id="s-skind"><option value="sell">Продать</option><option value="rent_out">Сдать в аренду</option></select></div>
+            <div class="field"><label for="s-city">Город</label><select class="input" id="s-city"></select></div>
+            <div class="field" data-for="sale rent"><label for="s-rooms">Комнаты</label>
+              <select class="input" id="s-rooms"><option value="">Любое</option><option value="0">Студия</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4+</option></select></div>
+            <div class="field" data-for="sale rent"><label for="s-max">Цена до, ₸</label><input class="input" id="s-max" inputmode="numeric" placeholder="Без ограничения"></div>
+            <div class="field" data-for="value sell"><label for="s-area">Площадь, м²</label><input class="input" id="s-area" inputmode="decimal" placeholder="Например, 64"></div>
+            <div class="field" data-for="sell"><label for="s-phone">Телефон</label><input class="input" id="s-phone" type="tel" inputmode="tel" placeholder="+7 (7__) ___-__-__"></div>
+            <button class="btn lg" type="submit" id="s-go">Найти</button>
+          </form>
+        </div>
+        <div class="quick-links" id="quick-links"></div>
+        <div class="facts" id="facts"></div>
+      </div>
+      <div class="hero-plan" aria-hidden="true">
+        <div class="plan-frame" id="hero-plan"></div>
+        <a class="est" href="valuation.html" id="hero-est" tabindex="-1">
+          <span class="eyebrow">Онлайн-оценка · 3 комнаты, 86,4 м²</span>
+          <b id="hero-est-value">—</b>
+          <span class="xs muted" id="hero-est-city"></span>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap">
+      <div class="section-head">
+        <div class="titles"><span class="eyebrow">Каталог</span><h2>Избранные объекты</h2></div>
+        <a class="btn ghost" href="catalog.html">Весь каталог</a>
+      </div>
+      <div class="cards" id="featured"></div>
+    </div>
+  </section>
+
+  <section class="section band">
+    <div class="wrap">
+      <div class="section-head">
+        <div class="titles"><span class="eyebrow">Услуги</span><h2>Всё, что нужно для сделки</h2>
+          <p>Покупка, продажа, аренда, юридическая проверка, ипотека и оценка. Стоимость фиксируем в договоре до начала работы.</p></div>
+        <a class="btn ghost" href="services.html">Все услуги и цены</a>
+      </div>
+      <div class="tiles" id="services"></div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap val-band">
+      <div class="stack" style="gap:18px">
+        <span class="eyebrow accent">Независимая оценка</span>
+        <h2>Оценка движимого и недвижимого имущества</h2>
+        <p class="muted" id="appraiser-note">Отчёты для банка, нотариуса, суда, раздела имущества, страхования и МСФО.</p>
+        <div class="quick-links" id="purposes"></div>
+        <div class="row">
+          <a class="btn" href="valuation.html">Рассчитать онлайн</a>
+          <button class="btn ghost" type="button" data-lead="valuation" data-title="Заказать отчёт об оценке">Заказать отчёт</button>
+        </div>
+      </div>
+      <div class="val-cats" id="val-cats"></div>
+    </div>
+  </section>
+
+  <section class="section band">
+    <div class="wrap">
+      <div class="section-head">
+        <div class="titles"><span class="eyebrow">Как мы работаем</span><h2>Понятный порядок действий</h2></div>
+        <div class="seg" id="proc-tabs" role="group" aria-label="Процесс">
+          <button type="button" data-p="buy" aria-pressed="true">Покупка</button>
+          <button type="button" data-p="sell" aria-pressed="false">Продажа</button>
+          <button type="button" data-p="rent" aria-pressed="false">Аренда</button>
+          <button type="button" data-p="valuation" aria-pressed="false">Оценка</button>
+          <button type="button" data-p="mortgage" aria-pressed="false">Ипотека</button>
+        </div>
+      </div>
+      <div class="steps" id="steps"></div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap stack" style="gap:28px">
+      <div class="section-head" style="margin:0">
+        <div class="titles"><span class="eyebrow">Ипотека</span><h2>Сколько будет платёж</h2></div>
+        <a class="btn ghost" href="calculators.html">Все калькуляторы</a>
+      </div>
+      <form class="mini-calc panel-box" id="mini-calc">
+        <div class="field"><label for="mc-price">Цена, ₸</label><input class="input" id="mc-price" inputmode="numeric" value="30 000 000"></div>
+        <div class="field"><label for="mc-down">Взнос, %</label><input class="input" id="mc-down" inputmode="decimal" value="20"></div>
+        <div class="field"><label for="mc-rate">Ставка, %</label><input class="input" id="mc-rate" inputmode="decimal" value="9"></div>
+        <div class="field"><label for="mc-years">Срок, лет</label><input class="input" id="mc-years" inputmode="numeric" value="19"></div>
+        <div class="out" aria-live="polite"><b id="mc-out">—</b><span id="mc-sub">в месяц, аннуитет</span></div>
+      </form>
+      <div class="table-wrap"><table class="t">
+        <thead><tr><th>Программа</th><th>Банк</th><th>Ставка</th><th class="num">Взнос от</th><th class="num">Срок</th></tr></thead>
+        <tbody id="programs"></tbody>
+      </table></div>
+      <p class="form-note">Условия программ на октябрь 2026 года. Перед подачей заявки проверьте их на сайте банка — наш ипотечный брокер делает это за вас.</p>
+    </div>
+  </section>
+
+  <section class="section band">
+    <div class="wrap">
+      <div class="section-head">
+        <div class="titles"><span class="eyebrow">Полезное</span><h2>Разбираемся в деталях</h2></div>
+        <a class="btn ghost" href="guide.html">Статьи, документы, FAQ</a>
+      </div>
+      <div class="article-cards" id="articles"></div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap grid g2" style="gap:40px">
+      <div class="stack">
+        <div class="titles stack" style="gap:8px"><span class="eyebrow">Отзывы</span><h2>Что говорят клиенты</h2></div>
+        <div class="stack" id="reviews"></div>
+      </div>
+      <div class="stack">
+        <div class="titles stack" style="gap:8px"><span class="eyebrow">Вопросы</span><h2>Часто спрашивают</h2></div>
+        <div id="faq"></div>
+        <a href="guide.html#faq">Все вопросы и ответы</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="section band">
+    <div class="wrap cta-band">
+      <div class="stack">
+        <span class="eyebrow accent">Индивидуальный подбор</span>
+        <h2>Не нашли подходящий вариант?</h2>
+        <p class="muted">Опишите, что ищете, — подберём объекты по нашей базе, у застройщиков и на порталах, проверим документы и пришлём подборку с комментариями.</p>
+      </div>
+      <form class="panel-box form-grid" id="cta-form" novalidate>
+        <div class="field"><label for="cta-name">Имя</label><input class="input" id="cta-name" autocomplete="name"></div>
+        <div class="field"><label for="cta-phone">Телефон *</label><input class="input" id="cta-phone" type="tel" inputmode="tel" placeholder="+7 (7__) ___-__-__"></div>
+        <div class="field full"><label for="cta-msg">Что ищете</label><textarea class="input" id="cta-msg" rows="3" placeholder="Например: 2-комнатная в Есильском районе до 45 млн, под ипотеку «Наурыз»"></textarea></div>
+        <label class="check full"><input type="checkbox" id="cta-consent" checked> <span>Согласен на обработку персональных данных (<a href="privacy.html">политика</a>)</span></label>
+        <p class="error-text full" id="cta-err" hidden></p>
+        <div class="full"><button class="btn lg block" type="submit">Подобрать варианты</button></div>
+      </form>
+    </div>
+  </section>
+</main>
+<footer id="site-footer"></footer>
+
+<script type="module">
+import { boot, db, esc, money, moneyShort, num, icon, link, byId, listingCard, planSvg, PTYPE, VAL_CAT,
+  estimateProperty, factorMap, mortgage, openLead, phoneInput, validPhone, formatPhone, errText, session, fmtDateLong } from './app.js';
+
+boot(async (s) => {
+  if (s.home.hero_title) document.getElementById('hero-title').textContent = s.home.hero_title;
+  if (s.home.hero_sub) document.getElementById('hero-sub').textContent = s.home.hero_sub;
+  if (s.company.appraiser_note) document.getElementById('appraiser-note').textContent = s.company.appraiser_note;
+
+  const [cities, districts, listings, services, vtypes, purposes, steps, programs, articles, reviews, faq, priceIndex, factorsRows] = await Promise.all([
+    db.list('cities', { eq: { is_active: true }, order: 'sort' }),
+    db.list('districts', { order: 'sort' }),
+    db.list('listings', { in: { status: ['published', 'reserved'] }, order: ['published_at', 'desc'] }),
+    db.list('services', { eq: { is_active: true }, order: 'sort' }),
+    db.list('valuation_types', { eq: { is_active: true }, order: 'sort' }),
+    db.list('valuation_purposes', { order: 'sort' }),
+    db.list('process_steps', { order: 'step_no' }),
+    db.list('mortgage_programs', { eq: { is_active: true }, order: 'sort' }),
+    db.list('articles', { eq: { is_published: true }, order: ['published_at', 'desc'], limit: 3 }),
+    db.list('reviews', { eq: { is_published: true }, order: ['created_at', 'desc'], limit: 3 }),
+    db.list('faq', { eq: { is_active: true }, order: 'sort', limit: 6 }),
+    db.list('price_index'),
+    db.list('valuation_factors', { order: 'sort' })
+  ]);
+  const ctx = { cities: byId(cities), districts: byId(districts) };
+
+  // ---- Поиск ----
+  const $ = id => document.getElementById(id);
+  $('s-type').innerHTML = Object.entries(PTYPE).map(([k, v]) => `<option value="${k}">${v}</option>`).join('');
+  $('s-city').innerHTML = '<option value="">Все города</option>' + cities.map(c => `<option value="${c.id}">${esc(c.name)}</option>`).join('');
+  phoneInput($('s-phone'));
+  let mode = 'sale';
+  const labels = { sale: 'Найти', rent: 'Найти', value: 'Рассчитать', sell: 'Отправить' };
+  function setMode(m) {
+    mode = m;
+    document.querySelectorAll('.tab[data-mode]').forEach(t => t.setAttribute('aria-selected', t.dataset.mode === m));
+    document.querySelectorAll('#search-form [data-for]').forEach(f => { f.hidden = !f.dataset.for.split(' ').includes(m); });
+    $('s-go').textContent = labels[m];
+  }
+  document.querySelectorAll('.tab[data-mode]').forEach(t => t.addEventListener('click', () => setMode(t.dataset.mode)));
+  setMode('sale');
+  $('search-form').addEventListener('submit', e => {
+    e.preventDefault();
+    const city = $('s-city').value;
+    if (mode === 'sale' || mode === 'rent') {
+      const q = { deal: mode, type: $('s-type').value, city, rooms: $('s-rooms').value, max: $('s-max').value.replace(/\D/g, '') };
+      session.set('qadam-search', q);
+      location.href = link('catalog.html', q);
+    } else if (mode === 'value') {
+      session.set('qadam-valuation', { kind: $('s-vkind').value, city_id: city, area: $('s-area').value });
+      location.href = 'valuation.html#calc';
+    } else {
+      const kind = $('s-skind').value;
+      if (!validPhone($('s-phone').value)) {
+        openLead({ kind, title: kind === 'sell' ? 'Продать объект' : 'Сдать в аренду', payload: { Город: ctx.cities.get(Number(city))?.name || '', 'Площадь': $('s-area').value } });
+        return;
+      }
+      db.insert('leads', { kind, phone: formatPhone($('s-phone').value), payload: { Город: ctx.cities.get(Number(city))?.name || '', 'Площадь, м²': $('s-area').value }, source: 'index.html' }, { returning: false })
+        .then(() => openLead({ kind, title: 'Спасибо! Заявка принята', subtitle: 'Можете дополнить её: имя, адрес, удобное время для звонка.' }))
+        .catch(ex => alertInline(errText(ex)));
+    }
+  });
+  function alertInline(t) { $('quick-links').insertAdjacentHTML('beforebegin', `<p class="error-text">${esc(t)}</p>`); }
+
+  $('quick-links').innerHTML = [
+    ['Новостройки', link('catalog.html', { new: '1' })],
+    ['С ипотекой', link('catalog.html', { mortgage: '1' })],
+    ['Дома и дачи', link('catalog.html', { type: 'house' })],
+    ['Участки', link('catalog.html', { type: 'land' })],
+    ['Коммерция', link('catalog.html', { type: 'commercial' })],
+    ['Аренда', link('catalog.html', { deal: 'rent' })]
+  ].map(([t, h]) => `<a class="chip" href="${h}">${t}</a>`).join('');
+
+  // ---- Факты — считаем из базы, ничего не выдумываем ----
+  const forSale = listings.filter(l => l.deal_type === 'sale').length;
+  const forRent = listings.length - forSale;
+  $('facts').innerHTML = [
+    [num(forSale), 'объектов в продаже'],
+    [num(forRent), 'в аренде'],
+    [num(vtypes.length), 'видов оценки'],
+    [num(cities.length), 'городов в базе цен']
+  ].map(([b, t]) => `<div class="fact"><b>${b}</b><span>${t}</span></div>`).join('');
+
+  // ---- Иллюстрация: планировка и пример онлайн-оценки ----
+  $('hero-plan').innerHTML = planSvg({ id: 11, rooms: 3, area_total: 86.4, property_type: 'apartment' });
+  const city0 = cities[0];
+  if (city0) {
+    const est = estimateProperty({ kind: 'apartment', deal: 'sale', city_id: city0.id, area: 86.4, rooms: 3, building_type: 'monolith', condition: 'euro', year: 2018, floor_pos: 'middle' },
+      { priceIndex, factors: factorMap(factorsRows), districts });
+    if (est) { $('hero-est-value').textContent = moneyShort(est.value) + ' ₸'; $('hero-est-city').textContent = `${city0.name}, монолит, евроремонт · ±7%`; }
+  }
+
+  // ---- Объекты ----
+  let featured = listings.filter(l => l.is_featured);
+  if (featured.length < 6) featured = featured.concat(listings.filter(l => !l.is_featured)).slice(0, 6);
+  $('featured').innerHTML = featured.slice(0, 6).map(l => listingCard(l, ctx)).join('') ||
+    '<div class="empty">Объекты появятся здесь, как только вы добавите их в админке.</div>';
+
+  // ---- Услуги ----
+  const top = services.filter(x => x.category !== 'valuation').slice(0, 8);
+  $('services').innerHTML = top.map(x => `<a class="tile" href="services.html#${esc(x.slug)}">
+      ${icon(x.icon || 'key', 'ico')}<h3>${esc(x.title)}</h3><p>${esc(x.short || '')}</p>
+      <span class="from">${x.price_from ? 'от ' + money(x.price_from) : esc(x.price_text || '')}</span></a>`).join('');
+
+  // ---- Оценка ----
+  $('purposes').innerHTML = purposes.slice(0, 8).map(p => `<span class="chip">${esc(p.title)}</span>`).join('');
+  const groups = {};
+  for (const v of vtypes) (groups[v.category] = groups[v.category] || []).push(v);
+  $('val-cats').innerHTML = Object.entries(groups).map(([cat, list]) => {
+    const from = Math.min(...list.map(v => Number(v.price_from) || Infinity));
+    return `<a class="val-cat" href="valuation.html#${cat}"><span class="t">${esc(VAL_CAT[cat] || cat)}</span>
+      <span class="from">${isFinite(from) ? 'от ' + money(from) : ''}</span>
+      <span class="list">${list.map(v => esc(v.title)).join(' · ')}</span></a>`;
+  }).join('');
+
+  // ---- Этапы ----
+  function renderSteps(p) {
+    document.querySelectorAll('#proc-tabs button').forEach(b => b.setAttribute('aria-pressed', b.dataset.p === p));
+    $('steps').innerHTML = steps.filter(x => x.process === p).map(x => `<div class="step">
+      <span class="n">Шаг ${x.step_no}</span><h3>${esc(x.title)}</h3><p>${esc(x.description || '')}</p>${x.duration ? `<span class="dur">${esc(x.duration)}</span>` : ''}</div>`).join('');
+  }
+  $('proc-tabs').addEventListener('click', e => { const b = e.target.closest('button'); if (b) renderSteps(b.dataset.p); });
+  renderSteps('buy');
+
+  // ---- Мини-калькулятор ипотеки ----
+  const toNum = v => Number(String(v).replace(/\s/g, '').replace(',', '.')) || 0;
+  function calc() {
+    const price = toNum($('mc-price').value);
+    const r = mortgage({ price, down: price * toNum($('mc-down').value) / 100, rate: toNum($('mc-rate').value), years: toNum($('mc-years').value) });
+    $('mc-out').textContent = r ? money(r.first) : '—';
+    $('mc-sub').textContent = r ? `в месяц · переплата ${moneyShort(r.overpay)} ₸` : 'заполните поля';
+  }
+  $('mini-calc').addEventListener('input', calc);
+  $('mini-calc').addEventListener('submit', e => e.preventDefault());
+  calc();
+  $('programs').innerHTML = programs.slice(0, 5).map(p => `<tr><td><b>${esc(p.name)}</b></td><td>${esc(p.bank || '')}</td><td>${esc(p.rate_text || (p.rate ? p.rate + '%' : ''))}</td>
+    <td class="num">${p.down_payment_pct !== null ? num(p.down_payment_pct) + '%' : '—'}</td><td class="num">${p.term_years ? 'до ' + p.term_years + ' лет' : '—'}</td></tr>`).join('');
+
+  // ---- Статьи ----
+  $('articles').innerHTML = articles.map(a => `<a class="article-card" href="${link('article.html', { slug: a.slug })}">
+    <span class="eyebrow">${esc(a.category)}</span><h3>${esc(a.title)}</h3><p>${esc(a.excerpt || '')}</p>
+    <span class="meta"><span>${fmtDateLong(a.published_at)}</span>${a.reading_min ? `<span>${a.reading_min} мин</span>` : ''}</span></a>`).join('');
+
+  // ---- Отзывы ----
+  const star = icon('star');
+  $('reviews').innerHTML = reviews.length ? reviews.map(r => `<div class="panel-box review">
+      <div class="stars" aria-label="Оценка ${r.rating} из 5">${star.repeat(r.rating)}</div>
+      <p>${esc(r.text)}</p><span class="small muted">${esc(r.author)}${r.service ? ' · ' + esc(r.service) : ''}</span></div>`).join('')
+    : `<div class="empty"><p>Здесь появятся отзывы клиентов после модерации.</p><a class="btn ghost" href="about.html#review">Оставить отзыв</a></div>`;
+
+  // ---- FAQ ----
+  $('faq').innerHTML = faq.map(q => `<details class="qa"><summary>${esc(q.question)}</summary><div class="a">${esc(q.answer)}</div></details>`).join('');
+
+  // ---- Форма подбора ----
+  phoneInput($('cta-phone'));
+  $('cta-form').addEventListener('submit', async e => {
+    e.preventDefault();
+    const err = $('cta-err'); err.hidden = true;
+    if (!validPhone($('cta-phone').value)) { err.textContent = 'Укажите телефон полностью: +7 и 10 цифр.'; err.hidden = false; return; }
+    if (!$('cta-consent').checked) { err.textContent = 'Нужно согласие на обработку персональных данных.'; err.hidden = false; return; }
+    const btn = e.submitter; btn.disabled = true;
+    try {
+      await db.insert('leads', { kind: 'buy', name: $('cta-name').value.trim() || null, phone: formatPhone($('cta-phone').value), message: $('cta-msg').value.trim() || null, source: 'index.html#подбор' }, { returning: false });
+      $('cta-form').innerHTML = `<div class="success-state full"><div class="tick">${icon('check')}</div><h3>Заявка принята</h3><p class="muted">${esc(s.home.promise || 'Мы свяжемся с вами.')}</p></div>`;
+    } catch (ex) { err.textContent = errText(ex); err.hidden = false; btn.disabled = false; }
+  });
+});
+</script>
+</body>
+</html>

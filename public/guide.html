@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="claude:viewport-fit-sides" content="cover">
+<title>База знаний · Qadam</title>
+<meta name="description" content="Статьи о покупке, продаже, аренде и оценке недвижимости в Казахстане, чек-листы документов, ответы на вопросы и словарь терминов.">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Unbounded:wght@500;600;700&display=swap">
+<link rel="stylesheet" href="styles.css">
+<style>
+  .kb-sec { scroll-margin-top: calc(var(--header-h) + 24px); }
+  .cl-grid { display: grid; grid-template-columns: 300px minmax(0, 1fr); gap: 24px; align-items: start; }
+  .cl-list { display: flex; flex-direction: column; border: 1px solid var(--line); border-radius: var(--r-lg); overflow: hidden; background: var(--surface); }
+  .cl-list button { text-align: left; border: 0; border-bottom: 1px solid var(--line); background: transparent; padding: 12px 14px; cursor: pointer; display: flex; flex-direction: column; gap: 2px; }
+  .cl-list button:last-child { border-bottom: 0; }
+  .cl-list button[aria-current="true"] { background: var(--accent-soft); }
+  .cl-list .who { font: 500 11px/1.3 var(--font-mono); text-transform: uppercase; letter-spacing: .06em; color: var(--ink-3); }
+  .progress { height: 6px; border-radius: 3px; background: var(--surface-2); overflow: hidden; }
+  .progress i { display: block; height: 100%; background: var(--accent); width: 0; transition: width .2s; }
+  @media (max-width: 860px) { .cl-grid { grid-template-columns: minmax(0, 1fr); } .cl-list { flex-direction: row; overflow-x: auto; } .cl-list button { border-bottom: 0; border-right: 1px solid var(--line); min-width: 200px; } }
+  .gl { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 0 32px; }
+  .gl div { padding: 12px 0; border-bottom: 1px solid var(--line); }
+  .gl dt { font-weight: 600; }
+  .gl dd { margin: 4px 0 0; color: var(--ink-2); font-size: var(--fs-sm); }
+  .checklist li > span svg, .checklist li > span { color: var(--accent); }
+</style>
+</head>
+<body data-page="guide">
+<header id="site-header"></header>
+<main>
+  <section class="page-head">
+    <div class="wrap">
+      <nav class="crumbs" aria-label="Навигация"><a href="index.html">Главная</a><span>/</span><span>Полезное</span></nav>
+      <h1>База знаний</h1>
+      <p>Как устроены сделки с недвижимостью в Казахстане: документы, налоги, ипотека, оценка. Тексты обновляем при изменении законов и тарифов.</p>
+      <div class="row">
+        <a class="chip" href="#articles">Статьи</a><a class="chip" href="#checklists">Чек-листы документов</a><a class="chip" href="#faq">Вопросы и ответы</a><a class="chip" href="#glossary">Словарь терминов</a>
+      </div>
+      <div class="field" style="max-width:520px;margin-top:8px"><label for="q">Поиск по базе знаний</label><input class="input" id="q" placeholder="Например: задаток, налог, Наурыз, техпаспорт"></div>
+    </div>
+  </section>
+
+  <section class="section kb-sec" id="articles">
+    <div class="wrap">
+      <div class="section-head"><div class="titles"><span class="eyebrow">Статьи</span><h2>Разбираем по шагам</h2></div><div class="row" id="a-cats"></div></div>
+      <div class="article-cards" id="a-list"></div>
+    </div>
+  </section>
+
+  <section class="section kb-sec band" id="checklists">
+    <div class="wrap">
+      <div class="section-head"><div class="titles"><span class="eyebrow">Чек-листы</span><h2>Какие документы нужны</h2>
+        <p>Отмечайте, что уже готово, — отметки сохраняются в этом браузере.</p></div></div>
+      <div class="cl-grid"><div class="cl-list" id="cl-list"></div><div class="panel-box stack" id="cl-body"></div></div>
+    </div>
+  </section>
+
+  <section class="section kb-sec" id="faq">
+    <div class="wrap">
+      <div class="section-head"><div class="titles"><span class="eyebrow">Вопросы и ответы</span><h2>Часто спрашивают</h2></div><div class="row" id="f-cats"></div></div>
+      <div id="f-list" style="max-width:900px"></div>
+    </div>
+  </section>
+
+  <section class="section kb-sec band" id="glossary">
+    <div class="wrap">
+      <div class="section-head"><div class="titles"><span class="eyebrow">Словарь</span><h2>Термины сделок и оценки</h2></div></div>
+      <dl class="gl" id="g-list"></dl>
+    </div>
+  </section>
+</main>
+<footer id="site-footer"></footer>
+<script type="module">
+import { boot, db, esc, icon, link, store, fmtDateLong } from './app.js';
+boot(async () => {
+  const $ = id => document.getElementById(id);
+  const [articles, checklists, faq, glossary] = await Promise.all([
+    db.list('articles', { eq: { is_published: true }, order: ['published_at', 'desc'] }),
+    db.list('checklists', { order: 'sort' }),
+    db.list('faq', { eq: { is_active: true }, order: 'sort' }),
+    db.list('glossary', { order: 'term' })
+  ]);
+  let q = '', aCat = '', fCat = '';
+  const has = (...parts) => !q || parts.join(' ').toLowerCase().includes(q);
+
+  const aCats = [...new Set(articles.map(a => a.category))];
+  $('a-cats').innerHTML = ['', ...aCats].map(c => `<button type="button" class="chip" data-c="${esc(c)}" aria-pressed="${c === aCat}">${esc(c || 'Все')}</button>`).join('');
+  $('a-cats').addEventListener('click', e => { const b = e.target.closest('[data-c]'); if (b) { aCat = b.dataset.c; renderA(); } });
+  function renderA() {
+    document.querySelectorAll('#a-cats .chip').forEach(c => c.setAttribute('aria-pressed', c.dataset.c === aCat));
+    const list = articles.filter(a => (!aCat || a.category === aCat) && has(a.title, a.excerpt, a.body, (a.tags || []).join(' ')));
+    $('a-list').innerHTML = list.map(a => `<a class="article-card" href="${link('article.html', { slug: a.slug })}">
+      <span class="eyebrow">${esc(a.category)}</span><h3>${esc(a.title)}</h3><p>${esc(a.excerpt || '')}</p>
+      <span class="meta"><span>${fmtDateLong(a.published_at)}</span>${a.reading_min ? `<span>${a.reading_min} мин чтения</span>` : ''}</span></a>`).join('') || '<p class="muted">Ничего не найдено.</p>';
+  }
+
+  // ---- Чек-листы ----
+  let cur = checklists[0]?.slug;
+  const key = slug => 'qadam-cl-' + slug;
+  function renderCL() {
+    const list = checklists.filter(c => has(c.title, c.intro, c.items.map(i => i.title + ' ' + i.note).join(' ')));
+    if (!list.find(c => c.slug === cur)) cur = list[0]?.slug;
+    $('cl-list').innerHTML = list.map(c => `<button type="button" data-s="${esc(c.slug)}" aria-current="${c.slug === cur}"><span class="who">${esc(c.audience || '')}</span><b>${esc(c.title)}</b></button>`).join('');
+    const c = list.find(x => x.slug === cur);
+    if (!c) { $('cl-body').innerHTML = '<p class="muted">Ничего не найдено.</p>'; return; }
+    const done = new Set(store.get(key(c.slug), []));
+    $('cl-body').innerHTML = `<span class="eyebrow">${esc(c.audience || '')}</span><h3 style="font-size:var(--fs-xl)">${esc(c.title)}</h3>
+      ${c.intro ? `<p class="muted">${esc(c.intro)}</p>` : ''}
+      <div class="row between small"><span id="cl-count"></span><button class="btn ghost sm" type="button" id="cl-reset">Снять отметки</button></div>
+      <div class="progress"><i id="cl-bar"></i></div>
+      <ul class="checklist">${c.items.map((it, i) => `<li class="${done.has(i) ? 'done' : ''}"><input type="checkbox" id="ci-${i}" data-i="${i}" ${done.has(i) ? 'checked' : ''}>
+        <label for="ci-${i}"><div class="t">${esc(it.title)}</div>${it.note ? `<div class="n">${esc(it.note)}</div>` : ''}</label></li>`).join('')}</ul>
+      <div class="row"><button class="btn" type="button" data-lead="legal" data-title="Помощь с документами">Поможем собрать документы</button></div>`;
+    const upd = () => {
+      const d = store.get(key(c.slug), []);
+      $('cl-count').textContent = `Готово ${d.length} из ${c.items.length}`;
+      $('cl-bar').style.width = (d.length / c.items.length * 100) + '%';
+    };
+    $('cl-body').querySelector('.checklist').addEventListener('change', e => {
+      const i = Number(e.target.dataset.i);
+      const d = new Set(store.get(key(c.slug), []));
+      e.target.checked ? d.add(i) : d.delete(i);
+      store.set(key(c.slug), [...d]);
+      e.target.closest('li').classList.toggle('done', e.target.checked);
+      upd();
+    });
+    $('cl-reset').addEventListener('click', () => { store.del(key(c.slug)); renderCL(); });
+    upd();
+  }
+  $('cl-list').addEventListener('click', e => { const b = e.target.closest('[data-s]'); if (b) { cur = b.dataset.s; renderCL(); } });
+
+  // ---- FAQ ----
+  const fCats = [...new Set(faq.map(x => x.category))];
+  $('f-cats').innerHTML = ['', ...fCats].map(c => `<button type="button" class="chip" data-c="${esc(c)}" aria-pressed="${c === fCat}">${esc(c || 'Все')}</button>`).join('');
+  $('f-cats').addEventListener('click', e => { const b = e.target.closest('[data-c]'); if (b) { fCat = b.dataset.c; renderF(); } });
+  function renderF() {
+    document.querySelectorAll('#f-cats .chip').forEach(c => c.setAttribute('aria-pressed', c.dataset.c === fCat));
+    const list = faq.filter(x => (!fCat || x.category === fCat) && has(x.question, x.answer));
+    $('f-list').innerHTML = list.map(x => `<details class="qa" ${q ? 'open' : ''}><summary>${esc(x.question)}</summary><div class="a">${esc(x.answer)}</div></details>`).join('') || '<p class="muted">Ничего не найдено.</p>';
+  }
+
+  // ---- Глоссарий ----
+  function renderG() {
+    $('g-list').innerHTML = glossary.filter(g => has(g.term, g.definition)).map(g => `<div><dt>${esc(g.term)}</dt><dd>${esc(g.definition)}</dd></div>`).join('') || '<p class="muted">Ничего не найдено.</p>';
+  }
+
+  const all = () => { renderA(); renderCL(); renderF(); renderG(); };
+  $('q').addEventListener('input', e => { q = e.target.value.trim().toLowerCase(); all(); });
+  all();
+  if (location.hash) setTimeout(() => document.getElementById(location.hash.slice(1))?.scrollIntoView(), 30);
+});
+</script>
+</body>
+</html>

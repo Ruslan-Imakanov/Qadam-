@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="claude:viewport-fit-sides" content="cover">
+<title>Политика конфиденциальности · Qadam</title>
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Unbounded:wght@500;600;700&display=swap">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body data-page="">
+<header id="site-header"></header>
+<main>
+  <section class="page-head"><div class="wrap"><nav class="crumbs"><a href="index.html">Главная</a><span>/</span><span>Политика конфиденциальности</span></nav>
+    <h1>Политика конфиденциальности</h1><p>Порядок сбора, хранения и защиты персональных данных посетителей сайта.</p></div></section>
+  <section class="section tight"><div class="wrap">
+    <div class="article" id="text">
+      <div class="notice">Шаблон. Перед запуском сайта проверьте текст с юристом и укажите реквизиты компании.</div>
+      <h2>1. Общие положения</h2>
+      <p>Политика разработана в соответствии с Законом Республики Казахстан «О персональных данных и их защите» и определяет, как <span data-co>агентство</span> (далее — Агентство) обрабатывает персональные данные, которые посетители оставляют на сайте.</p>
+      <h2>2. Какие данные мы собираем</h2>
+      <ul><li>имя, номер телефона, адрес электронной почты;</li><li>сведения об объекте недвижимости или имуществе, которые вы указываете в заявке, включая фото и документы;</li><li>технические данные: адрес страницы, с которой отправлена заявка.</li></ul>
+      <h2>3. Цели обработки</h2>
+      <ul><li>связь с вами по заявке, подбор, продажа, аренда и оценка объектов;</li><li>подготовка договоров и сопровождение сделок;</li><li>улучшение работы сайта.</li></ul>
+      <h2>4. Хранение и защита</h2>
+      <p>Данные хранятся в защищённой облачной базе данных с разграничением доступа: заявки видят только сотрудники Агентства. Мы не передаём данные третьим лицам, кроме случаев, необходимых для исполнения вашей заявки (нотариус, банк, оценщик) или предусмотренных законом.</p>
+      <h2>5. Избранное и настройки</h2>
+      <p>Избранные объекты, список сравнения, отметки в чек-листах и выбор темы оформления сохраняются только в вашем браузере (localStorage) и не передаются Агентству.</p>
+      <h2>6. Ваши права</h2>
+      <p>Вы можете запросить сведения о своих данных, их изменение или удаление, а также отозвать согласие на обработку, написав нам на <span data-email>e-mail</span> или позвонив по телефону <span data-phone></span>.</p>
+      <h2>7. Контакты</h2>
+      <p data-legal></p>
+    </div>
+  </div></section>
+</main>
+<footer id="site-footer"></footer>
+<script type="module">
+import { boot } from './app.js';
+boot(async (s) => {
+  document.querySelectorAll('[data-co]').forEach(e => { e.textContent = s.company.legal_name || s.company.name; });
+  document.querySelectorAll('[data-email]').forEach(e => { e.textContent = s.contacts.email || 'e-mail компании'; });
+  document.querySelectorAll('[data-phone]').forEach(e => { e.textContent = s.contacts.phone || ''; });
+  document.querySelector('[data-legal]').textContent = [s.company.legal_name, s.company.bin && 'БИН ' + s.company.bin, s.contacts.address, s.contacts.email].filter(Boolean).join(' · ');
+});
+</script>
+</body>
+</html>

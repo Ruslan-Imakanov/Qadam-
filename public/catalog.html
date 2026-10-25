@@ -1,0 +1,294 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="claude:viewport-fit-sides" content="cover">
+<title>Каталог объектов · Qadam</title>
+<meta name="description" content="Квартиры, дома, участки и коммерческая недвижимость в Казахстане: продажа и аренда с фильтрами, картой и избранным.">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Unbounded:wght@500;600;700&display=swap">
+<link rel="stylesheet" href="styles.css">
+<style>
+  .range-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chips .chip { padding: 6px 10px; font-size: var(--fs-xs); }
+  .toggles { display: flex; flex-direction: column; gap: 10px; }
+  .list-view .cards { grid-template-columns: minmax(0, 1fr); }
+  .list-view .card { flex-direction: row; }
+  .list-view .card-media { width: 300px; flex: none; aspect-ratio: 4 / 3; }
+  @media (max-width: 640px) { .list-view .card { flex-direction: column; } .list-view .card-media { width: 100%; } }
+  .filters-head { display: none; }
+  @media (max-width: 900px) { .filters-head { display: flex; justify-content: space-between; align-items: center; } }
+</style>
+</head>
+<body data-page="buy">
+<header id="site-header"></header>
+<main>
+  <section class="page-head">
+    <div class="wrap">
+      <nav class="crumbs" aria-label="Навигация"><a href="index.html">Главная</a><span>/</span><span id="crumb">Каталог</span></nav>
+      <h1 id="title">Каталог недвижимости</h1>
+      <div class="seg" id="deal" role="group" aria-label="Тип сделки">
+        <button type="button" data-v="sale" aria-pressed="true">Купить</button>
+        <button type="button" data-v="rent" aria-pressed="false">Снять</button>
+        <button type="button" data-v="daily" aria-pressed="false">Посуточно</button>
+      </div>
+    </div>
+  </section>
+  <div class="wrap catalog">
+    <aside class="filters" id="filters">
+      <form class="panel-box" id="ff" autocomplete="off">
+        <div class="filters-head"><b>Фильтры</b><button class="icon-btn" type="button" id="ff-close" aria-label="Закрыть">✕</button></div>
+        <div class="field"><label for="f-q">Поиск</label><input class="input" id="f-q" placeholder="Адрес, ЖК, артикул A-00012"></div>
+        <div class="field"><span class="label">Тип недвижимости</span><div class="chips" id="f-type"></div></div>
+        <div class="field"><label for="f-city">Город</label><select class="input" id="f-city"></select></div>
+        <div class="field"><label for="f-district">Район</label><select class="input" id="f-district"></select></div>
+        <div class="field" id="rooms-field"><span class="label">Комнаты</span><div class="chips" id="f-rooms"></div></div>
+        <div class="field"><span class="label">Цена, ₸</span><div class="range-pair"><input class="input" id="f-pmin" inputmode="numeric" placeholder="от"><input class="input" id="f-pmax" inputmode="numeric" placeholder="до"></div></div>
+        <div class="field"><span class="label">Площадь, м²</span><div class="range-pair"><input class="input" id="f-amin" inputmode="decimal" placeholder="от"><input class="input" id="f-amax" inputmode="decimal" placeholder="до"></div></div>
+        <div class="field"><label for="f-build">Материал дома</label><select class="input" id="f-build"></select></div>
+        <div class="field"><label for="f-year">Год постройки от</label><input class="input" id="f-year" inputmode="numeric" placeholder="Например, 2010"></div>
+        <div class="toggles">
+          <label class="check"><input type="checkbox" id="f-new"> Новостройка</label>
+          <label class="check"><input type="checkbox" id="f-mortgage"> Подходит под ипотеку</label>
+          <label class="check"><input type="checkbox" id="f-inst"> Рассрочка</label>
+          <label class="check"><input type="checkbox" id="f-exchange"> Возможен обмен</label>
+          <label class="check"><input type="checkbox" id="f-notfirst"> Не первый этаж</label>
+          <label class="check"><input type="checkbox" id="f-notlast"> Не последний этаж</label>
+          <label class="check"><input type="checkbox" id="f-photo"> Только с фото</label>
+          <label class="check"><input type="checkbox" id="f-sold"> Показать проданные и сданные</label>
+        </div>
+        <div class="row"><button class="btn ghost sm" type="reset" id="f-reset">Сбросить</button><button class="btn sm filters-toggle" type="button" id="f-apply">Показать</button></div>
+      </form>
+    </aside>
+    <section aria-live="polite">
+      <div class="result-bar">
+        <div class="row">
+          <button class="btn ghost sm filters-toggle" type="button" id="open-filters">Фильтры</button>
+          <b id="count">…</b>
+        </div>
+        <div class="row">
+          <label class="sr-only" for="sort">Сортировка</label>
+          <select class="input" id="sort" style="width:auto;min-height:38px;padding:6px 10px;font-size:var(--fs-sm)">
+            <option value="new">Сначала новые</option>
+            <option value="cheap">Сначала дешевле</option>
+            <option value="expensive">Сначала дороже</option>
+            <option value="m2">Дешевле за м²</option>
+            <option value="area">Больше площадь</option>
+          </select>
+          <div class="view-switch" role="group" aria-label="Вид">
+            <button type="button" data-view="grid" aria-pressed="true">Плитка</button>
+            <button type="button" data-view="list" aria-pressed="false">Список</button>
+            <button type="button" data-view="map" aria-pressed="false">Карта</button>
+          </div>
+        </div>
+      </div>
+      <div id="results"><div class="cards" id="cards"></div></div>
+      <div id="map" class="map-box" hidden></div>
+      <div class="row" style="justify-content:center;margin-top:24px"><button class="btn ghost" type="button" id="more" hidden>Показать ещё</button></div>
+      <div class="panel-box" style="margin-top:32px">
+        <div class="row between">
+          <div class="stack" style="gap:4px"><h3>Не нашли подходящий вариант?</h3><p class="muted small">Оставьте запрос — пришлём подборку, в том числе объекты, которых ещё нет на сайте.</p></div>
+          <button class="btn" type="button" id="ask">Подобрать под меня</button>
+        </div>
+      </div>
+    </section>
+  </div>
+</main>
+<footer id="site-footer"></footer>
+
+<script type="module">
+import { boot, db, esc, num, link, byId, listingCard, listingTitle, moneyShort, PTYPE, DEAL, session, makeMap, pricePin, openLead, money, plural } from './app.js';
+
+boot(async () => {
+  const $ = id => document.getElementById(id);
+  const [cities, districts, all] = await Promise.all([
+    db.list('cities', { eq: { is_active: true }, order: 'sort' }),
+    db.list('districts', { order: 'sort' }),
+    db.list('listings', { in: { status: ['published', 'reserved', 'sold'] }, order: ['published_at', 'desc'] })
+  ]);
+  const ctx = { cities: byId(cities), districts: byId(districts) };
+
+  // ---- Начальные фильтры: ?параметры, #токен или поиск с главной ----
+  const qs = new URLSearchParams(location.search);
+  const token = location.hash.slice(1);
+  const handoff = session.get('qadam-search') || {};
+  session.del('qadam-search');
+  const F = {
+    deal: qs.get('deal') || (['sale', 'rent', 'daily'].includes(token) ? token : handoff.deal) || 'sale',
+    types: new Set((qs.get('type') || (PTYPE[token] ? token : handoff.type) || '').split(',').filter(Boolean)),
+    city: qs.get('city') || handoff.city || '',
+    district: qs.get('district') || '',
+    rooms: new Set((qs.get('rooms') ?? handoff.rooms ?? '').split(',').filter(x => x !== '')),
+    pmin: qs.get('min') || '', pmax: qs.get('max') || handoff.max || '',
+    amin: qs.get('amin') || '', amax: qs.get('amax') || '',
+    build: qs.get('build') || '', year: qs.get('year') || '',
+    new: qs.get('new') === '1' || token === 'new', mortgage: qs.get('mortgage') === '1' || token === 'mortgage',
+    inst: false, exchange: false, notfirst: false, notlast: false, photo: false, sold: false,
+    q: qs.get('q') || ''
+  };
+  if (F.new || F.mortgage) F.deal = 'sale';
+
+  // ---- Отрисовка элементов фильтра ----
+  $('f-type').innerHTML = Object.entries(PTYPE).map(([k, v]) => `<button type="button" class="chip" data-v="${k}" aria-pressed="${F.types.has(k)}">${v}</button>`).join('');
+  $('f-rooms').innerHTML = [['0', 'Студия'], ['1', '1'], ['2', '2'], ['3', '3'], ['4', '4+']].map(([k, v]) => `<button type="button" class="chip" data-v="${k}" aria-pressed="${F.rooms.has(k)}">${v}</button>`).join('');
+  $('f-city').innerHTML = '<option value="">Все города</option>' + cities.map(c => `<option value="${c.id}" ${String(c.id) === String(F.city) ? 'selected' : ''}>${esc(c.name)}</option>`).join('');
+  const builds = [...new Set(all.map(l => l.building_type).filter(Boolean))].sort();
+  $('f-build').innerHTML = '<option value="">Любой</option>' + builds.map(b => `<option ${b === F.build ? 'selected' : ''}>${esc(b)}</option>`).join('');
+  function fillDistricts() {
+    const list = districts.filter(d => String(d.city_id) === String(F.city));
+    $('f-district').innerHTML = '<option value="">Все районы</option>' + list.map(d => `<option value="${d.id}" ${String(d.id) === String(F.district) ? 'selected' : ''}>${esc(d.name)}</option>`).join('');
+    $('f-district').disabled = !list.length;
+  }
+  fillDistricts();
+  const setVal = (id, v) => { $(id).value = v; };
+  setVal('f-q', F.q); setVal('f-pmin', F.pmin); setVal('f-pmax', F.pmax); setVal('f-amin', F.amin); setVal('f-amax', F.amax); setVal('f-year', F.year);
+  $('f-new').checked = F.new; $('f-mortgage').checked = F.mortgage;
+
+  function setDeal(d) {
+    F.deal = d;
+    document.querySelectorAll('#deal button').forEach(b => b.setAttribute('aria-pressed', b.dataset.v === d));
+    const t = d === 'sale' ? 'Купить недвижимость' : d === 'rent' ? 'Снять недвижимость' : 'Посуточная аренда';
+    $('title').textContent = t; $('crumb').textContent = t;
+    document.body.dataset.page = d === 'sale' ? 'buy' : 'rent';
+    document.querySelectorAll('.main-nav a, .mobile-menu a').forEach(a => a.removeAttribute('aria-current'));
+  }
+  setDeal(F.deal);
+
+  // ---- Фильтрация на клиенте: каталог агентства — сотни объектов, отвечает мгновенно ----
+  const n = v => Number(String(v).replace(/\s/g, '').replace(',', '.')) || 0;
+  function filtered() {
+    const q = F.q.trim().toLowerCase();
+    let rows = all.filter(l => {
+      if (l.deal_type !== F.deal) return false;
+      if (!F.sold && l.status === 'sold') return false;
+      if (F.types.size && !F.types.has(l.property_type)) return false;
+      if (F.city && String(l.city_id) !== String(F.city)) return false;
+      if (F.district && String(l.district_id) !== String(F.district)) return false;
+      if (F.rooms.size) {
+        const r = l.rooms ? Math.min(4, l.rooms) : 0;
+        if (!['apartment', 'room', 'house'].includes(l.property_type) || !F.rooms.has(String(r))) return false;
+      }
+      if (F.pmin && l.price < n(F.pmin)) return false;
+      if (F.pmax && l.price > n(F.pmax)) return false;
+      if (F.amin && (l.area_total || 0) < n(F.amin)) return false;
+      if (F.amax && (l.area_total || 0) > n(F.amax)) return false;
+      if (F.build && l.building_type !== F.build) return false;
+      if (F.year && (l.year_built || 0) < n(F.year)) return false;
+      if (F.new && !l.is_new_building) return false;
+      if (F.mortgage && !l.mortgage_ok) return false;
+      if (F.inst && !l.installment_ok) return false;
+      if (F.exchange && !l.exchange_ok) return false;
+      if (F.notfirst && l.floor === 1) return false;
+      if (F.notlast && l.floor && l.floor === l.floors_total) return false;
+      if (F.photo && !(l.photos || []).length) return false;
+      if (q) {
+        const hay = [l.title, l.address, l.complex_name, l.code, l.description, ctx.cities.get(l.city_id)?.name, ctx.districts.get(l.district_id)?.name].join(' ').toLowerCase();
+        if (!hay.includes(q)) return false;
+      }
+      return true;
+    });
+    const sort = $('sort').value;
+    const m2 = l => l.area_total ? l.price / l.area_total : Infinity;
+    if (sort === 'cheap') rows.sort((a, b) => a.price - b.price);
+    else if (sort === 'expensive') rows.sort((a, b) => b.price - a.price);
+    else if (sort === 'm2') rows.sort((a, b) => m2(a) - m2(b));
+    else if (sort === 'area') rows.sort((a, b) => (b.area_total || 0) - (a.area_total || 0));
+    rows.sort((a, b) => (a.status === 'sold') - (b.status === 'sold'));
+    return rows;
+  }
+
+  let shown = 24, view = 'grid', mapObj = null, markers = null;
+  function render() {
+    const rows = filtered();
+    $('count').textContent = `${num(rows.length)} ${plural(rows.length, ['объект', 'объекта', 'объектов'])}`;
+    $('cards').innerHTML = rows.slice(0, shown).map(l => listingCard(l, ctx)).join('') ||
+      `<div class="empty"><p>По этим условиям сейчас ничего нет.</p><div class="row"><button class="btn ghost" type="button" id="empty-reset">Сбросить фильтры</button><button class="btn" type="button" id="empty-ask">Оставить запрос на подбор</button></div></div>`;
+    $('more').hidden = view === 'map' || rows.length <= shown;
+    $('empty-reset')?.addEventListener('click', () => $('f-reset').click());
+    $('empty-ask')?.addEventListener('click', ask);
+    if (view === 'map') drawMap(rows);
+    syncUrl();
+  }
+  async function drawMap(rows) {
+    const pts = rows.filter(l => l.lat && l.lng);
+    const c = ctx.cities.get(Number(F.city)) || cities[0] || { lat: 48, lng: 68 };
+    if (!mapObj) {
+      mapObj = await makeMap($('map'), { lat: c.lat, lng: c.lng, zoom: F.city ? 12 : 5 });
+      markers = mapObj.L.layerGroup().addTo(mapObj.map);
+    }
+    markers.clearLayers();
+    for (const l of pts) {
+      mapObj.L.marker([l.lat, l.lng], { icon: pricePin(mapObj.L, moneyShort(l.price)) })
+        .bindPopup(`<b>${esc(listingTitle(l))}</b><br>${money(l.price)}<br><a href="${link('object.html', { id: l.id })}">Открыть объект</a>`)
+        .addTo(markers);
+    }
+    if (pts.length) mapObj.map.fitBounds(pts.map(l => [l.lat, l.lng]), { padding: [40, 40], maxZoom: 14 });
+    setTimeout(() => mapObj.map.invalidateSize(), 50);
+  }
+  function syncUrl() {
+    if (location.protocol === 'file:') return;
+    const p = new URLSearchParams();
+    p.set('deal', F.deal);
+    if (F.types.size) p.set('type', [...F.types].join(','));
+    if (F.city) p.set('city', F.city);
+    if (F.district) p.set('district', F.district);
+    if (F.rooms.size) p.set('rooms', [...F.rooms].join(','));
+    if (F.pmin) p.set('min', n(F.pmin)); if (F.pmax) p.set('max', n(F.pmax));
+    if (F.amin) p.set('amin', F.amin); if (F.amax) p.set('amax', F.amax);
+    if (F.build) p.set('build', F.build); if (F.year) p.set('year', F.year);
+    if (F.new) p.set('new', '1'); if (F.mortgage) p.set('mortgage', '1');
+    if (F.q) p.set('q', F.q);
+    try { history.replaceState(null, '', '?' + p.toString()); } catch { /* предпросмотр без истории */ }
+  }
+
+  // ---- События ----
+  const chipToggle = (boxId, set) => $(boxId).addEventListener('click', e => {
+    const b = e.target.closest('.chip'); if (!b) return;
+    const v = b.dataset.v; set.has(v) ? set.delete(v) : set.add(v);
+    b.setAttribute('aria-pressed', set.has(v)); shown = 24; render();
+  });
+  chipToggle('f-type', F.types); chipToggle('f-rooms', F.rooms);
+  $('deal').addEventListener('click', e => { const b = e.target.closest('button'); if (b) { setDeal(b.dataset.v); shown = 24; render(); } });
+  $('f-city').addEventListener('change', () => { F.city = $('f-city').value; F.district = ''; fillDistricts(); render(); if (mapObj && F.city) { const c = ctx.cities.get(Number(F.city)); mapObj.map.setView([c.lat, c.lng], 12); } });
+  $('f-district').addEventListener('change', () => { F.district = $('f-district').value; render(); });
+  const bind = (id, key, ev = 'input') => $(id).addEventListener(ev, () => { F[key] = $(id).type === 'checkbox' ? $(id).checked : $(id).value; shown = 24; render(); });
+  bind('f-q', 'q'); bind('f-pmin', 'pmin'); bind('f-pmax', 'pmax'); bind('f-amin', 'amin'); bind('f-amax', 'amax'); bind('f-year', 'year');
+  bind('f-build', 'build', 'change');
+  for (const [id, key] of [['f-new', 'new'], ['f-mortgage', 'mortgage'], ['f-inst', 'inst'], ['f-exchange', 'exchange'], ['f-notfirst', 'notfirst'], ['f-notlast', 'notlast'], ['f-photo', 'photo'], ['f-sold', 'sold']]) bind(id, key, 'change');
+  $('sort').addEventListener('change', render);
+  $('f-reset').addEventListener('click', () => setTimeout(() => {
+    Object.assign(F, { city: '', district: '', pmin: '', pmax: '', amin: '', amax: '', build: '', year: '', q: '', new: false, mortgage: false, inst: false, exchange: false, notfirst: false, notlast: false, photo: false, sold: false });
+    F.types.clear(); F.rooms.clear();
+    document.querySelectorAll('#f-type .chip, #f-rooms .chip').forEach(c => c.setAttribute('aria-pressed', 'false'));
+    fillDistricts(); render();
+  }));
+  $('more').addEventListener('click', () => { shown += 24; render(); });
+  document.querySelector('.view-switch').addEventListener('click', e => {
+    const b = e.target.closest('button'); if (!b) return;
+    view = b.dataset.view;
+    document.querySelectorAll('.view-switch button').forEach(x => x.setAttribute('aria-pressed', x === b));
+    $('results').hidden = view === 'map'; $('map').hidden = view !== 'map';
+    $('results').classList.toggle('list-view', view === 'list');
+    render();
+  });
+  const filtersEl = $('filters');
+  $('open-filters').addEventListener('click', () => filtersEl.classList.add('open'));
+  $('ff-close').addEventListener('click', () => filtersEl.classList.remove('open'));
+  $('f-apply').addEventListener('click', () => filtersEl.classList.remove('open'));
+  filtersEl.addEventListener('click', e => { if (e.target === filtersEl) filtersEl.classList.remove('open'); });
+  $('ff').addEventListener('submit', e => e.preventDefault());
+  function ask() {
+    const city = ctx.cities.get(Number(F.city))?.name;
+    openLead({ kind: F.deal === 'sale' ? 'buy' : 'rent', title: 'Подбор недвижимости', subtitle: 'Пришлём варианты под ваши условия',
+      payload: { Сделка: DEAL[F.deal], Тип: [...F.types].map(t => PTYPE[t]).join(', '), Город: city || '', 'Цена до': F.pmax, Комнаты: [...F.rooms].join(', ') } });
+  }
+  $('ask').addEventListener('click', ask);
+  render();
+});
+</script>
+</body>
+</html>

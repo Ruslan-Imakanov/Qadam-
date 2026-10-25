@@ -1,0 +1,381 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="claude:viewport-fit-sides" content="cover">
+<title>Оценка имущества · Qadam</title>
+<meta name="description" content="Независимая оценка квартир, домов, участков, коммерческой недвижимости, автомобилей, спецтехники, оборудования и бизнеса. Онлайн-калькулятор и отчёт для банка, нотариуса и суда.">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Unbounded:wght@500;600;700&display=swap">
+<link rel="stylesheet" href="styles.css">
+<style>
+  .vt { display: grid; grid-template-columns: minmax(0, 1fr) 220px; gap: 16px 24px; padding: 18px 0; border-bottom: 1px solid var(--line); }
+  .vt:last-child { border-bottom: 0; }
+  .vt h3 { font-size: var(--fs-lg); }
+  .vt .side { display: flex; flex-direction: column; gap: 8px; align-items: flex-start; }
+  .vt .price { font: 600 var(--fs-md)/1.3 var(--font-mono); color: var(--accent); }
+  .vt details summary { cursor: pointer; color: var(--accent); font-size: var(--fs-sm); font-weight: 600; }
+  .vt ul { margin: 8px 0 0; padding-left: 1.2em; font-size: var(--fs-sm); color: var(--ink-2); display: flex; flex-direction: column; gap: 4px; }
+  @media (max-width: 640px) { .vt { grid-template-columns: minmax(0, 1fr); } }
+  .breakdown { display: flex; flex-direction: column; gap: 6px; font-size: var(--fs-sm); }
+  .breakdown .ln { display: flex; justify-content: space-between; gap: 12px; }
+  .breakdown .ln b { font-family: var(--font-mono); font-weight: 500; white-space: nowrap; }
+  .calc-form { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+  .calc-form .full { grid-column: 1 / -1; }
+  @media (max-width: 560px) { .calc-form { grid-template-columns: minmax(0, 1fr); } }
+  .drop { border: 1.5px dashed var(--line-strong); border-radius: var(--r-md); padding: 16px; text-align: center; color: var(--ink-2); font-size: var(--fs-sm); cursor: pointer; background: var(--bg); }
+  .drop.over { border-color: var(--accent); background: var(--accent-soft); }
+  .files-list { display: flex; flex-wrap: wrap; gap: 6px; }
+</style>
+</head>
+<body data-page="valuation">
+<header id="site-header"></header>
+<main>
+  <section class="page-head">
+    <div class="wrap">
+      <nav class="crumbs" aria-label="Навигация"><a href="index.html">Главная</a><span>/</span><span>Оценка</span></nav>
+      <h1>Оценка движимого и недвижимого имущества</h1>
+      <p id="note">Квартиры, дома, участки, коммерция, транспорт, оборудование, бизнес и ущерб. Отчёты для банка, нотариуса, суда, страховой и МСФО.</p>
+      <div class="row"><a class="btn" href="#calc">Онлайн-расчёт</a><a class="btn ghost" href="#order">Заказать отчёт</a></div>
+    </div>
+  </section>
+
+  <section class="section tight" id="calc">
+    <div class="wrap stack" style="gap:20px">
+      <div class="section-head" style="margin:0">
+        <div class="titles"><span class="eyebrow accent">Онлайн-калькулятор</span><h2>Сколько стоит ваше имущество</h2>
+          <p>Ориентир по средним ценам города и типовым поправкам. Официальную стоимость определяет оценщик после осмотра.</p></div>
+        <div class="seg" id="calc-mode" role="group" aria-label="Объект">
+          <button type="button" data-m="property" aria-pressed="true">Недвижимость</button>
+          <button type="button" data-m="auto" aria-pressed="false">Автомобиль</button>
+          <button type="button" data-m="equipment" aria-pressed="false">Оборудование</button>
+        </div>
+      </div>
+      <div class="calc">
+        <div class="panel-box">
+          <form class="calc-form" id="cf-property" autocomplete="off">
+            <div class="field"><label for="p-kind">Объект</label><select class="input" id="p-kind">
+              <option value="apartment">Квартира</option><option value="house">Дом с участком</option><option value="land">Земельный участок</option><option value="commercial">Коммерческое помещение</option></select></div>
+            <div class="field"><label for="p-deal">Что посчитать</label><select class="input" id="p-deal"><option value="sale">Рыночную стоимость</option><option value="rent">Ставку аренды в месяц</option></select></div>
+            <div class="field"><label for="p-city">Город</label><select class="input" id="p-city"></select></div>
+            <div class="field"><label for="p-district">Район</label><select class="input" id="p-district"></select></div>
+            <div class="field" data-k="apartment house commercial"><label for="p-area">Площадь, м²</label><input class="input" id="p-area" inputmode="decimal" value="64"></div>
+            <div class="field" data-k="house land"><label for="p-land">Участок, соток</label><input class="input" id="p-land" inputmode="decimal" value="8"></div>
+            <div class="field" data-k="apartment house"><label for="p-rooms">Комнат</label><select class="input" id="p-rooms"><option value="0">Студия</option><option value="1">1</option><option value="2" selected>2</option><option value="3">3</option><option value="4">4 и более</option></select></div>
+            <div class="field" data-k="apartment"><label for="p-floor">Этаж</label><select class="input" id="p-floor"></select></div>
+            <div class="field" data-k="apartment house"><label for="p-build">Материал стен</label><select class="input" id="p-build"></select></div>
+            <div class="field" data-k="apartment house commercial"><label for="p-cond">Состояние</label><select class="input" id="p-cond"></select></div>
+            <div class="field" data-k="apartment house"><label for="p-year">Год постройки</label><input class="input" id="p-year" inputmode="numeric" value="2012"></div>
+            <div class="field" data-k="land"><label for="p-comm">Коммуникации</label><select class="input" id="p-comm"></select></div>
+            <div class="field full" data-k="apartment"><span class="label">Дополнительно</span><div class="row" id="p-extras"></div></div>
+          </form>
+          <form class="calc-form" id="cf-auto" hidden autocomplete="off">
+            <div class="field full"><label for="a-model">Марка и модель</label><input class="input" id="a-model" placeholder="Например, Toyota Camry 2.5"></div>
+            <div class="field"><label for="a-year">Год выпуска</label><input class="input" id="a-year" inputmode="numeric" value="2019"></div>
+            <div class="field"><label for="a-km">Пробег, км</label><input class="input" id="a-km" inputmode="numeric" value="95000"></div>
+            <div class="field full"><label for="a-new">Цена нового аналога сегодня, ₸</label><input class="input" id="a-new" inputmode="numeric" value="18 500 000"><span class="form-note">Посмотрите у официального дилера цену той же модели и комплектации.</span></div>
+            <div class="field"><label for="a-cond">Состояние</label><select class="input" id="a-cond"></select></div>
+            <div class="field"><label for="a-acc">ДТП</label><select class="input" id="a-acc"></select></div>
+          </form>
+          <form class="calc-form" id="cf-equipment" hidden autocomplete="off">
+            <div class="field full"><label for="e-name">Оборудование</label><input class="input" id="e-name" placeholder="Например, токарный станок, кофемашина, сервер"></div>
+            <div class="field"><label for="e-price">Цена покупки или нового аналога, ₸</label><input class="input" id="e-price" inputmode="numeric" value="4 000 000"></div>
+            <div class="field"><label for="e-age">Возраст, лет</label><input class="input" id="e-age" inputmode="decimal" value="3"></div>
+            <div class="field"><label for="e-life">Срок службы, лет</label><input class="input" id="e-life" inputmode="decimal" value="10"></div>
+            <div class="field"><label for="e-cond">Состояние</label><select class="input" id="e-cond"></select></div>
+          </form>
+        </div>
+        <div class="result-card" aria-live="polite">
+          <span class="eyebrow" id="r-label">Ориентировочная стоимость</span>
+          <div class="big" id="r-value">—</div>
+          <div class="range" id="r-range"></div>
+          <div class="lines breakdown" id="r-steps"></div>
+          <p class="xs" style="opacity:.75" id="r-src"></p>
+          <div class="row">
+            <button class="btn" type="button" id="r-order">Заказать официальный отчёт</button>
+            <button class="btn ghost" type="button" id="r-sell">Продать по этой цене</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section band">
+    <div class="wrap">
+      <div class="section-head">
+        <div class="titles"><span class="eyebrow">Что оцениваем</span><h2>Виды оценки, документы и цены</h2></div>
+        <div class="seg" id="cat-tabs" role="group" aria-label="Категория"></div>
+      </div>
+      <div id="vtypes"></div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap stack" style="gap:20px">
+      <div class="titles stack" style="gap:8px"><span class="eyebrow">Для чего нужна оценка</span><h2>Цели оценки и кто требует отчёт</h2></div>
+      <div class="table-wrap"><table class="t">
+        <thead><tr><th>Цель</th><th>Кто требует</th><th>Вид стоимости</th><th>Что важно знать</th></tr></thead>
+        <tbody id="purposes"></tbody>
+      </table></div>
+    </div>
+  </section>
+
+  <section class="section band">
+    <div class="wrap">
+      <div class="section-head"><div class="titles"><span class="eyebrow">Порядок</span><h2>Как проходит оценка</h2></div></div>
+      <div class="steps" id="steps"></div>
+    </div>
+  </section>
+
+  <section class="section" id="order">
+    <div class="wrap grid g2" style="gap:40px;align-items:start">
+      <div class="stack">
+        <span class="eyebrow accent">Заказ отчёта</span>
+        <h2>Заявка на оценку</h2>
+        <p class="muted">Опишите объект и цель — назовём стоимость и срок до начала работы. Фото документов можно приложить сразу: так оценщик подготовится к осмотру.</p>
+        <div class="callout" id="law">Отчёт подписывает оценщик с квалификационным свидетельством, состоящий в палате оценщиков (Закон РК № 133-VI «Об оценочной деятельности в Республике Казахстан»).</div>
+        <div id="vfaq"></div>
+      </div>
+      <form class="panel-box form-grid" id="of" novalidate>
+        <div class="field"><label for="o-cat">Категория</label><select class="input" id="o-cat"></select></div>
+        <div class="field"><label for="o-type">Объект</label><select class="input" id="o-type"></select></div>
+        <div class="field"><label for="o-purpose">Цель оценки</label><select class="input" id="o-purpose"></select></div>
+        <div class="field"><label for="o-city">Город</label><input class="input" id="o-city" placeholder="Где находится объект"></div>
+        <div class="field full"><label for="o-desc">Описание объекта</label><textarea class="input" id="o-desc" rows="3" placeholder="Адрес, площадь, год, марка — всё, что знаете"></textarea></div>
+        <div class="field full"><span class="label">Документы и фото (необязательно)</span>
+          <label class="drop" id="drop" for="o-files">Перетащите файлы или нажмите, чтобы выбрать · JPG, PNG, PDF до 8 МБ</label>
+          <input id="o-files" type="file" multiple accept="image/*,application/pdf" hidden>
+          <div class="files-list" id="files-list"></div></div>
+        <div class="field"><label for="o-name">Имя</label><input class="input" id="o-name" autocomplete="name"></div>
+        <div class="field"><label for="o-phone">Телефон *</label><input class="input" id="o-phone" type="tel" inputmode="tel" placeholder="+7 (7__) ___-__-__"></div>
+        <div class="field full"><label for="o-email">E-mail для отчёта</label><input class="input" id="o-email" type="email" autocomplete="email"></div>
+        <label class="check full"><input type="checkbox" id="o-consent" checked> <span>Согласен на обработку персональных данных (<a href="privacy.html">политика</a>)</span></label>
+        <p class="error-text full" id="o-err" hidden></p>
+        <div class="full"><button class="btn lg block" type="submit">Отправить заявку на оценку</button></div>
+      </form>
+    </div>
+  </section>
+</main>
+<footer id="site-footer"></footer>
+
+<script type="module">
+import { boot, db, esc, num, money, moneyShort, icon, VAL_CAT, session, factorMap, estimateProperty, estimateAuto, estimateEquipment,
+  phoneInput, validPhone, formatPhone, errText, uploadFile, openLead, DEMO } from './app.js';
+
+boot(async (s) => {
+  const $ = id => document.getElementById(id);
+  if (s.company.appraiser_note) $('law').textContent = s.company.appraiser_note;
+  const [cities, districts, priceIndex, factorRows, vtypes, purposes, steps, faq] = await Promise.all([
+    db.list('cities', { eq: { is_active: true }, order: 'sort' }),
+    db.list('districts', { order: 'sort' }),
+    db.list('price_index'),
+    db.list('valuation_factors', { order: 'sort' }),
+    db.list('valuation_types', { eq: { is_active: true }, order: 'sort' }),
+    db.list('valuation_purposes', { order: 'sort' }),
+    db.list('process_steps', { eq: { process: 'valuation' }, order: 'step_no' }),
+    db.list('faq', { eq: { category: 'Оценка', is_active: true }, order: 'sort' })
+  ]);
+  const factors = factorMap(factorRows);
+  const opts = (f, sel) => (factors[f] || []).map(o => `<option value="${o.option_key}" ${o.option_key === sel ? 'selected' : ''}>${esc(o.label)}</option>`).join('');
+
+  // ---- Калькулятор: справочники ----
+  $('p-city').innerHTML = cities.map(c => `<option value="${c.id}">${esc(c.name)}</option>`).join('');
+  $('p-floor').innerHTML = opts('floor', 'middle');
+  $('p-build').innerHTML = opts('building_type', 'monolith');
+  $('p-cond').innerHTML = opts('condition', 'cosmetic');
+  $('p-comm').innerHTML = opts('land_comm', 'partial');
+  $('a-cond').innerHTML = opts('auto_condition', 'good');
+  $('a-acc').innerHTML = opts('auto_accident', 'none');
+  $('e-cond').innerHTML = opts('equip_condition', 'working');
+  $('p-extras').innerHTML = (factors.extra || []).map(o => `<label class="check"><input type="checkbox" value="${o.option_key}"> ${esc(o.label)}</label>`).join('');
+  function fillDistricts() {
+    const list = districts.filter(d => String(d.city_id) === $('p-city').value);
+    $('p-district').innerHTML = '<option value="">Средний по городу</option>' + list.map(d => `<option value="${d.id}">${esc(d.name)}</option>`).join('');
+    $('p-district').disabled = !list.length;
+  }
+
+  // Предзаполнение с главной
+  const hand = session.get('qadam-valuation');
+  session.del('qadam-valuation');
+  let mode = 'property';
+  if (hand) {
+    if (hand.kind === 'auto' || hand.kind === 'equipment') mode = hand.kind;
+    else $('p-kind').value = hand.kind;
+    if (hand.city_id) $('p-city').value = hand.city_id;
+    if (hand.area) $('p-area').value = hand.area;
+  }
+  fillDistricts();
+
+  const n = v => Number(String(v).replace(/\s/g, '').replace(',', '.')) || 0;
+  let last = null;
+  function steps2html(list, base) {
+    return list.map(x => `<div class="ln"><span>${esc(x.label)}</span><b>${x.kind === 'coef' ? '× ' + num(x.value, 3) : x.kind === 'add' ? '+ ' + money(x.value) : money(x.value)}</b></div>`).join('');
+  }
+  function compute() {
+    let r = null, label = 'Ориентировочная стоимость', unit = '';
+    if (mode === 'property') {
+      const kind = $('p-kind').value;
+      document.querySelectorAll('#cf-property [data-k]').forEach(f => { f.hidden = !f.dataset.k.split(' ').includes(kind); });
+      const input = {
+        kind, deal: $('p-deal').value, city_id: $('p-city').value, district_id: $('p-district').value,
+        area: n($('p-area').value), land_area: n($('p-land').value), rooms: n($('p-rooms').value),
+        floor_pos: $('p-floor').value, building_type: $('p-build').value, condition: $('p-cond').value,
+        year: n($('p-year').value), land_comm: $('p-comm').value,
+        extras: [...document.querySelectorAll('#p-extras input:checked')].map(i => i.value)
+      };
+      r = estimateProperty(input, { priceIndex, factors, districts });
+      if (input.deal === 'rent') label = 'Рыночная ставка аренды в месяц';
+      if (r) unit = `${num(r.perUnit)} ₸ за ${r.unit}`;
+      last = { mode, input, r, city: cities.find(c => String(c.id) === input.city_id)?.name };
+    } else if (mode === 'auto') {
+      r = estimateAuto({ priceNew: n($('a-new').value), year: n($('a-year').value), mileage: n($('a-km').value), condition: $('a-cond').value, accident: $('a-acc').value }, factors);
+      last = { mode, r, model: $('a-model').value };
+    } else {
+      r = estimateEquipment({ price: n($('e-price').value), age: n($('e-age').value), life: n($('e-life').value), condition: $('e-cond').value }, factors);
+      last = { mode, r, name: $('e-name').value };
+    }
+    $('r-label').textContent = label;
+    if (!r || !r.value) {
+      $('r-value').textContent = '—'; $('r-range').textContent = 'Заполните площадь, цену или год'; $('r-steps').innerHTML = ''; $('r-src').textContent = ''; return;
+    }
+    $('r-value').textContent = money(r.value);
+    $('r-range').textContent = `диапазон ${moneyShort(r.low)} – ${moneyShort(r.high)} ₸${unit ? ' · ' + unit : ''}`;
+    $('r-steps').innerHTML = steps2html(r.steps);
+    $('r-src').textContent = mode === 'property'
+      ? `Источник средних цен: ${(r.source || 'база цен агентства').replace(/\.+$/, '')}. Это не отчёт об оценке.`
+      : 'Расчёт по типовой кривой износа. Это не отчёт об оценке: для нотариуса, банка или суда нужен осмотр оценщиком.';
+  }
+  function setMode(m) {
+    mode = m;
+    document.querySelectorAll('#calc-mode button').forEach(b => b.setAttribute('aria-pressed', b.dataset.m === m));
+    ['property', 'auto', 'equipment'].forEach(k => { $('cf-' + k).hidden = k !== m; });
+    $('r-sell').hidden = m !== 'property';
+    compute();
+  }
+  $('calc-mode').addEventListener('click', e => { const b = e.target.closest('button'); if (b) setMode(b.dataset.m); });
+  for (const f of ['cf-property', 'cf-auto', 'cf-equipment']) {
+    $(f).addEventListener('input', compute); $(f).addEventListener('change', compute); $(f).addEventListener('submit', e => e.preventDefault());
+  }
+  $('p-city').addEventListener('change', () => { fillDistricts(); compute(); });
+  setMode(mode);
+
+  // ---- Виды оценки ----
+  const cats = [...new Set(vtypes.map(v => v.category))];
+  let curCat = cats.includes(location.hash.slice(1)) ? location.hash.slice(1) : cats[0];
+  $('cat-tabs').innerHTML = cats.map(c => `<button type="button" data-c="${c}" aria-pressed="${c === curCat}">${esc(VAL_CAT[c] || c)}</button>`).join('');
+  function renderTypes() {
+    document.querySelectorAll('#cat-tabs button').forEach(b => b.setAttribute('aria-pressed', b.dataset.c === curCat));
+    $('vtypes').innerHTML = vtypes.filter(v => v.category === curCat).map(v => `<article class="vt" id="vt-${esc(v.slug)}">
+      <div class="stack" style="gap:8px">
+        <h3>${esc(v.title)}</h3>
+        <p class="muted">${esc(v.description || v.short || '')}</p>
+        <div class="row">${(v.purposes || []).map(p => `<span class="chip">${esc(p)}</span>`).join('')}</div>
+        ${(v.documents || []).length ? `<details><summary>Какие документы нужны</summary><ul>${v.documents.map(d => `<li>${esc(d)}</li>`).join('')}</ul></details>` : ''}
+      </div>
+      <div class="side">
+        <span class="price">${esc(v.price_text || (v.price_from ? 'от ' + money(v.price_from) : 'по запросу'))}</span>
+        ${v.duration ? `<span class="small muted">${icon('clock')} ${esc(v.duration)}</span>` : ''}
+        <button class="btn sm" type="button" data-order="${v.id}">Заказать</button>
+      </div></article>`).join('');
+  }
+  $('cat-tabs').addEventListener('click', e => { const b = e.target.closest('button'); if (b) { curCat = b.dataset.c; renderTypes(); } });
+  $('vtypes').addEventListener('click', e => {
+    const b = e.target.closest('[data-order]'); if (!b) return;
+    const v = vtypes.find(x => String(x.id) === b.dataset.order);
+    $('o-cat').value = v.category; fillOrderTypes(); $('o-type').value = v.id;
+    $('order').scrollIntoView({ behavior: 'smooth' });
+    setTimeout(() => $('o-desc').focus(), 400);
+  });
+  renderTypes();
+  if (cats.includes(location.hash.slice(1))) setTimeout(() => document.querySelector('#cat-tabs').scrollIntoView(), 50);
+
+  // ---- Цели, этапы, FAQ ----
+  $('purposes').innerHTML = purposes.map(p => `<tr><td><b>${esc(p.title)}</b></td><td>${esc(p.required_by || '')}</td><td>${esc(p.value_kind || '')}</td><td class="muted">${esc(p.description || '')}</td></tr>`).join('');
+  $('steps').innerHTML = steps.map(x => `<div class="step"><span class="n">Шаг ${x.step_no}</span><h3>${esc(x.title)}</h3><p>${esc(x.description || '')}</p>${x.duration ? `<span class="dur">${esc(x.duration)}</span>` : ''}</div>`).join('');
+  $('vfaq').innerHTML = faq.map(q => `<details class="qa"><summary>${esc(q.question)}</summary><div class="a">${esc(q.answer)}</div></details>`).join('');
+
+  // ---- Форма заказа ----
+  $('o-cat').innerHTML = cats.map(c => `<option value="${c}">${esc(VAL_CAT[c] || c)}</option>`).join('');
+  function fillOrderTypes() {
+    $('o-type').innerHTML = vtypes.filter(v => v.category === $('o-cat').value).map(v => `<option value="${v.id}">${esc(v.title)}</option>`).join('') + '<option value="">Другое</option>';
+  }
+  $('o-cat').addEventListener('change', fillOrderTypes);
+  fillOrderTypes();
+  $('o-purpose').innerHTML = purposes.map(p => `<option>${esc(p.title)}</option>`).join('') + '<option>Другое</option>';
+  phoneInput($('o-phone'));
+
+  const files = [];
+  const drop = $('drop');
+  function renderFiles() { $('files-list').innerHTML = files.map((f, i) => `<span class="chip">${esc(f.name)} <button type="button" data-rm="${i}" aria-label="Убрать" style="border:0;background:none;cursor:pointer;color:inherit">✕</button></span>`).join(''); }
+  function addFiles(list) {
+    for (const f of list) {
+      if (f.size > 8 * 1024 * 1024 && !f.type.startsWith('image/')) { $('o-err').textContent = `${f.name}: больше 8 МБ`; $('o-err').hidden = false; continue; }
+      if (files.length < 10) files.push(f);
+    }
+    renderFiles();
+  }
+  $('o-files').addEventListener('change', e => addFiles(e.target.files));
+  drop.addEventListener('dragover', e => { e.preventDefault(); drop.classList.add('over'); });
+  drop.addEventListener('dragleave', () => drop.classList.remove('over'));
+  drop.addEventListener('drop', e => { e.preventDefault(); drop.classList.remove('over'); addFiles(e.dataTransfer.files); });
+  $('files-list').addEventListener('click', e => { const b = e.target.closest('[data-rm]'); if (b) { files.splice(Number(b.dataset.rm), 1); renderFiles(); } });
+
+  // Из калькулятора — в заказ
+  $('r-order').addEventListener('click', () => {
+    if (!last) return;
+    if (last.mode === 'property') {
+      $('o-cat').value = 'real_estate'; fillOrderTypes();
+      const slug = { apartment: 'kvartira', house: 'dom', land: 'uchastok', commercial: 'kommercheskaya' }[last.input.kind];
+      const t = vtypes.find(v => v.slug === slug); if (t) $('o-type').value = t.id;
+      $('o-city').value = last.city || '';
+      $('o-desc').value = `${$('p-kind').selectedOptions[0].text}, ${last.input.area ? last.input.area + ' м²' : ''}${last.input.land_area && last.input.kind !== 'apartment' ? ', участок ' + last.input.land_area + ' сот.' : ''}. Онлайн-оценка: ${last.r ? money(last.r.value) : '—'}`;
+    } else if (last.mode === 'auto') {
+      $('o-cat').value = 'transport'; fillOrderTypes();
+      $('o-desc').value = `${last.model || 'Автомобиль'}, ${$('a-year').value} г., пробег ${$('a-km').value} км. Онлайн-оценка: ${last.r ? money(last.r.value) : '—'}`;
+    } else {
+      $('o-cat').value = 'equipment'; fillOrderTypes();
+      $('o-desc').value = `${last.name || 'Оборудование'}, возраст ${$('e-age').value} лет. Онлайн-оценка: ${last.r ? money(last.r.value) : '—'}`;
+    }
+    $('order').scrollIntoView({ behavior: 'smooth' });
+  });
+  $('r-sell').addEventListener('click', () => openLead({ kind: 'sell', title: 'Продать объект', subtitle: last?.r ? `Онлайн-оценка: ${money(last.r.value)}` : '',
+    payload: last?.mode === 'property' ? { Город: last.city, 'Площадь, м²': last.input.area, 'Онлайн-оценка': last.r?.value } : {} }));
+
+  $('of').addEventListener('submit', async e => {
+    e.preventDefault();
+    const err = $('o-err'); err.hidden = true;
+    if (!validPhone($('o-phone').value)) { err.textContent = 'Укажите телефон полностью: +7 и 10 цифр.'; err.hidden = false; $('o-phone').focus(); return; }
+    if (!$('o-consent').checked) { err.textContent = 'Нужно согласие на обработку персональных данных.'; err.hidden = false; return; }
+    const btn = e.submitter; btn.disabled = true; btn.textContent = files.length ? 'Загружаем файлы…' : 'Отправляем…';
+    try {
+      const paths = [];
+      for (const f of files) paths.push((await uploadFile('incoming', f, 'valuation')).path);
+      const typeId = $('o-type').value ? Number($('o-type').value) : null;
+      await db.insert('valuation_orders', {
+        object_category: $('o-cat').value,
+        valuation_type_id: typeId,
+        purpose: $('o-purpose').value,
+        name: $('o-name').value.trim() || null,
+        phone: formatPhone($('o-phone').value),
+        email: $('o-email').value.trim() || null,
+        city: $('o-city').value.trim() || null,
+        object_description: $('o-desc').value.trim() || null,
+        preliminary_value: last?.r?.value && $('o-desc').value.includes('Онлайн-оценка') ? last.r.value : null,
+        details: last?.mode === 'property' ? { calc: last.input } : {},
+        files: paths
+      }, { returning: false });
+      $('of').innerHTML = `<div class="success-state full"><div class="tick">${icon('check')}</div><h3>Заявка на оценку принята</h3>
+        <p class="muted">${esc(s.home.promise || 'Оценщик свяжется с вами, назовёт стоимость и срок.')}${DEMO ? ' (Демо-режим: заявка сохранена только в этом браузере.)' : ''}</p>
+        <a class="btn ghost" href="guide.html#checklists">Подготовить документы</a></div>`;
+    } catch (ex) {
+      err.textContent = 'Не удалось отправить: ' + errText(ex); err.hidden = false;
+      btn.disabled = false; btn.textContent = 'Отправить заявку на оценку';
+    }
+  });
+});
+</script>
+</body>
+</html>

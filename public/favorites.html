@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="claude:viewport-fit-sides" content="cover">
+<title>Избранное и сравнение · Qadam</title>
+<meta name="description" content="Избранные объекты, сравнение характеристик и недавно просмотренные.">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Unbounded:wght@500;600;700&display=swap">
+<link rel="stylesheet" href="styles.css">
+<style>
+  table.cmp td, table.cmp th { min-width: 180px; }
+  table.cmp th:first-child, table.cmp td:first-child { min-width: 150px; position: sticky; left: 0; background: var(--surface); z-index: 1; }
+  table.cmp .best { color: var(--ok); font-weight: 600; }
+</style>
+</head>
+<body data-page="">
+<header id="site-header"></header>
+<main>
+  <section class="page-head">
+    <div class="wrap">
+      <nav class="crumbs" aria-label="Навигация"><a href="index.html">Главная</a><span>/</span><span>Избранное</span></nav>
+      <h1>Избранное и сравнение</h1>
+      <p>Список хранится в этом браузере — регистрация не нужна. Отправьте подборку агенту, и он организует показы.</p>
+    </div>
+  </section>
+  <section class="section tight">
+    <div class="wrap stack" style="gap:32px">
+      <div class="stack">
+        <div class="row between"><h2 style="font-size:var(--fs-xl)">Сравнение</h2><span class="small muted">до 4 объектов · добавляйте кнопкой «Сравнить» в карточке объекта</span></div>
+        <div id="compare"></div>
+      </div>
+      <div class="stack">
+        <div class="row between"><h2 style="font-size:var(--fs-xl)">Избранное</h2><button class="btn sm" type="button" id="send">Отправить подборку агенту</button></div>
+        <div class="cards" id="favs"></div>
+      </div>
+      <div class="stack" id="recent-box">
+        <h2 style="font-size:var(--fs-xl)">Вы смотрели</h2>
+        <div class="cards" id="recent"></div>
+      </div>
+    </div>
+  </section>
+</main>
+<footer id="site-footer"></footer>
+<script type="module">
+import { boot, db, esc, num, money, link, byId, listingCard, listingTitle, cover, favorites, compare, recent, DEAL, PTYPE, openLead } from './app.js';
+boot(async () => {
+  const $ = id => document.getElementById(id);
+  const [cities, districts, all] = await Promise.all([
+    db.list('cities'), db.list('districts'),
+    db.list('listings', { in: { status: ['published', 'reserved', 'sold'] } })
+  ]);
+  const ctx = { cities: byId(cities), districts: byId(districts) };
+  const map = byId(all);
+  const pick = ids => ids.map(id => map.get(id)).filter(Boolean);
+
+  function renderFavs() {
+    const list = pick(favorites.all());
+    $('favs').innerHTML = list.map(l => listingCard(l, ctx)).join('') || `<div class="empty"><p>Нажимайте ♥ на карточках, чтобы сохранить объекты.</p><a class="btn" href="catalog.html">Перейти в каталог</a></div>`;
+    $('send').hidden = !list.length;
+  }
+  function renderCompare() {
+    const list = pick(compare.all());
+    if (!list.length) { $('compare').innerHTML = '<div class="notice">Пока нечего сравнивать. Откройте объект и нажмите «Сравнить».</div>'; return; }
+    const m2 = l => l.area_total && l.deal_type === 'sale' ? Math.round(l.price / l.area_total) : null;
+    const rows = [
+      ['Цена', l => money(l.price), l => l.price, 'min'],
+      ['Цена за м²', l => m2(l) ? num(m2(l)) + ' ₸' : '—', m2, 'min'],
+      ['Сделка', l => DEAL[l.deal_type]],
+      ['Тип', l => PTYPE[l.property_type]],
+      ['Город, район', l => [ctx.cities.get(l.city_id)?.name, ctx.districts.get(l.district_id)?.name].filter(Boolean).join(', ')],
+      ['Площадь', l => l.area_total ? num(l.area_total, 1) + ' м²' : '—', l => l.area_total, 'max'],
+      ['Кухня', l => l.area_kitchen ? num(l.area_kitchen, 1) + ' м²' : '—', l => l.area_kitchen, 'max'],
+      ['Комнат', l => l.rooms ?? '—'],
+      ['Этаж', l => l.floor ? `${l.floor}/${l.floors_total || '?'}` : '—'],
+      ['Год постройки', l => l.year_built || '—', l => l.year_built, 'max'],
+      ['Материал', l => l.building_type || '—'],
+      ['Состояние', l => l.condition || '—'],
+      ['Ипотека', l => l.mortgage_ok ? 'да' : 'нет'],
+      ['Парковка', l => l.parking || '—']
+    ];
+    $('compare').innerHTML = `<div class="table-wrap"><table class="t cmp"><thead><tr><th></th>${list.map(l => `<th style="text-transform:none;letter-spacing:0">
+      <div style="aspect-ratio:4/3;max-width:100%;border-radius:8px;overflow:hidden;margin-bottom:8px">${cover(l)}</div>
+      <a href="${link('object.html', { id: l.id })}" style="font:600 var(--fs-sm)/1.3 var(--font-body)">${esc(listingTitle(l))}</a>
+      <div><button class="btn ghost sm" type="button" data-unc="${l.id}" style="margin-top:6px">Убрать</button></div></th>`).join('')}</tr></thead>
+      <tbody>${rows.map(([label, fmt, val, best]) => {
+        let bestId = null;
+        if (val && list.length > 1) {
+          const vals = list.map(l => [l.id, val(l)]).filter(([, v]) => v);
+          if (vals.length > 1) bestId = vals.sort((a, b) => best === 'min' ? a[1] - b[1] : b[1] - a[1])[0][0];
+        }
+        return `<tr><td class="muted">${label}</td>${list.map(l => `<td class="${l.id === bestId ? 'best' : ''}">${esc(fmt(l))}</td>`).join('')}</tr>`;
+      }).join('')}</tbody></table></div>`;
+  }
+  function renderRecent() {
+    const list = pick(recent.all()).slice(0, 8);
+    $('recent-box').hidden = !list.length;
+    $('recent').innerHTML = list.map(l => listingCard(l, ctx)).join('');
+  }
+  $('compare').addEventListener('click', e => { const b = e.target.closest('[data-unc]'); if (b) { compare.remove(b.dataset.unc); renderCompare(); } });
+  document.addEventListener('click', e => { if (e.target.closest('[data-fav]')) setTimeout(renderFavs, 0); });
+  $('send').addEventListener('click', () => {
+    const list = pick(favorites.all());
+    openLead({ kind: 'viewing', title: 'Показать мою подборку', subtitle: `${list.length} объект(ов) из избранного`,
+      message: list.map(l => `${l.code} — ${listingTitle(l)}, ${money(l.price)}`).join('\n'), payload: { 'Объекты': list.map(l => l.code).join(', ') } });
+  });
+  renderCompare(); renderFavs(); renderRecent();
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="claude:viewport-fit-sides" content="cover">
+<title>Статья · Qadam</title>
+<meta name="description" content="Статья базы знаний агентства недвижимости.">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Unbounded:wght@500;600;700&display=swap">
+<link rel="stylesheet" href="styles.css">
+<style>
+  .art-layout { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 40px; align-items: start; padding-block: 32px 56px; }
+  .art-side { position: sticky; top: calc(var(--header-h) + env(safe-area-inset-top, 0px) + 16px); display: flex; flex-direction: column; gap: 16px; }
+  @media (max-width: 960px) { .art-layout { grid-template-columns: minmax(0, 1fr); } .art-side { position: static; } }
+  .art-meta { display: flex; flex-wrap: wrap; gap: 8px 18px; font: 400 var(--fs-sm)/1.4 var(--font-mono); color: var(--ink-3); }
+  .toc a { display: block; padding: 6px 0; color: var(--ink-2); text-decoration: none; font-size: var(--fs-sm); border-bottom: 1px solid var(--line); }
+  .toc a:hover { color: var(--accent); }
+</style>
+</head>
+<body data-page="guide">
+<header id="site-header"></header>
+<main><div class="wrap" id="root"><p class="muted" style="padding-block:40px">Загружаем статью…</p></div></main>
+<footer id="site-footer"></footer>
+<script type="module">
+import { boot, db, esc, md, link, param, fmtDateLong } from './app.js';
+boot(async (s) => {
+  const root = document.getElementById('root');
+  const slug = param('slug');
+  const a = slug ? await db.get('articles', slug, 'slug') : null;
+  if (!a || !a.is_published) {
+    root.innerHTML = `<div class="empty" style="margin-block:40px"><h2>Статья не найдена</h2><a class="btn" href="guide.html">Все статьи</a></div>`;
+    return;
+  }
+  document.title = `${a.title} · ${s.company.name}`;
+  document.querySelector('meta[name=description]').setAttribute('content', a.excerpt || a.title);
+  const others = (await db.list('articles', { eq: { is_published: true }, order: ['published_at', 'desc'] })).filter(x => x.id !== a.id);
+  const related = others.filter(x => x.category === a.category).concat(others.filter(x => x.category !== a.category)).slice(0, 3);
+  const body = md(a.body);
+  root.innerHTML = `<div class="art-layout">
+    <article class="stack" style="gap:20px">
+      <nav class="crumbs" aria-label="Навигация"><a href="index.html">Главная</a><span>/</span><a href="guide.html">Полезное</a><span>/</span><span>${esc(a.category)}</span></nav>
+      <span class="eyebrow accent">${esc(a.category)}</span>
+      <h1 style="font-size:var(--fs-2xl);max-width:28ch">${esc(a.title)}</h1>
+      <div class="art-meta"><span>${fmtDateLong(a.published_at)}</span>${a.reading_min ? `<span>${a.reading_min} мин чтения</span>` : ''}${(a.tags || []).map(t => `<span>#${esc(t)}</span>`).join('')}</div>
+      ${a.excerpt ? `<p class="lead muted" style="font-size:var(--fs-lg);max-width:65ch">${esc(a.excerpt)}</p>` : ''}
+      <div class="article" id="body">${body}</div>
+      <div class="notice">Материал носит справочный характер. Законы, тарифы и условия банков меняются — перед сделкой уточните актуальные правила или получите консультацию.</div>
+    </article>
+    <aside class="art-side">
+      <div class="panel-box toc" id="toc"></div>
+      <div class="panel-box stack"><h3>Нужна помощь?</h3><p class="small muted">Разберём вашу ситуацию и посчитаем расходы и налоги.</p>
+        <button class="btn" type="button" data-lead="consult" data-title="Консультация по статье" data-subtitle="${esc(a.title)}">Получить консультацию</button></div>
+      ${related.length ? `<div class="stack"><span class="eyebrow">Читайте также</span>${related.map(r => `<a class="article-card" href="${link('article.html', { slug: r.slug })}"><span class="eyebrow">${esc(r.category)}</span><b>${esc(r.title)}</b></a>`).join('')}</div>` : ''}
+    </aside>
+  </div>`;
+  const heads = [...document.querySelectorAll('#body h2')];
+  heads.forEach((h, i) => { h.id = 'p' + (i + 1); });
+  document.getElementById('toc').innerHTML = heads.length ? '<span class="eyebrow">Содержание</span>' + heads.map(h => `<a href="#${h.id}">${esc(h.textContent)}</a>`).join('') : '<span class="muted small">Короткая статья</span>';
+});
+</script>
+</body>
+</html>

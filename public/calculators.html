@@ -1,0 +1,303 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="claude:viewport-fit-sides" content="cover">
+<title>Ипотека и калькуляторы · Qadam</title>
+<meta name="description" content="Ипотечный калькулятор с графиком платежей, расчёт налога при продаже недвижимости по правилам 2026 года, расходы на сделку и доходность аренды.">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Unbounded:wght@500;600;700&display=swap">
+<link rel="stylesheet" href="styles.css">
+<style>
+  .calc-sec { scroll-margin-top: calc(var(--header-h) + 24px); }
+  .calc-sec + .calc-sec { border-top: 1px solid var(--line); }
+  .calc-nav { display: flex; gap: 6px; overflow-x: auto; }
+  .chart { width: 100%; height: auto; display: block; }
+  .chart text { font: 11px var(--font-mono); fill: var(--ink-3); }
+  .chart .grid line { stroke: var(--line); }
+  .prog-pick { display: flex; flex-wrap: wrap; gap: 6px; }
+</style>
+</head>
+<body data-page="calc">
+<header id="site-header"></header>
+<main>
+  <section class="page-head">
+    <div class="wrap">
+      <nav class="crumbs" aria-label="Навигация"><a href="index.html">Главная</a><span>/</span><span>Калькуляторы</span></nav>
+      <h1>Ипотека и расчёты по сделке</h1>
+      <p>Платёж по ипотеке, сколько банк может одобрить, налог при продаже по правилам 2026 года, расходы на оформление и доходность аренды.</p>
+      <nav class="calc-nav" aria-label="Калькуляторы">
+        <a class="chip" href="#mortgage">Ипотека</a><a class="chip" href="#afford">Сколько одобрит банк</a><a class="chip" href="#tax">Налог при продаже</a>
+        <a class="chip" href="#costs">Расходы на сделку</a><a class="chip" href="#yield">Доходность аренды</a><a class="chip" href="#programs">Госпрограммы</a>
+      </nav>
+    </div>
+  </section>
+
+  <section class="section calc-sec" id="mortgage">
+    <div class="wrap stack" style="gap:20px">
+      <div class="titles stack" style="gap:8px"><span class="eyebrow accent">Ипотечный калькулятор</span><h2>Платёж и переплата</h2></div>
+      <div class="calc">
+        <form class="panel-box form-grid" id="m-form">
+          <div class="field full"><span class="label">Программа</span><div class="prog-pick" id="m-progs"></div></div>
+          <div class="field"><label for="m-price">Стоимость жилья, ₸</label><input class="input" id="m-price" inputmode="numeric" value="35 000 000"></div>
+          <div class="field"><label for="m-down">Первоначальный взнос, %</label><input class="input" id="m-down" inputmode="decimal" value="20"></div>
+          <div class="field"><label for="m-rate">Ставка, % годовых</label><input class="input" id="m-rate" inputmode="decimal" value="9"></div>
+          <div class="field"><label for="m-years">Срок, лет</label><input class="input" id="m-years" inputmode="numeric" value="19"></div>
+          <div class="field full"><span class="label">Тип платежа</span>
+            <div class="seg" id="m-type" role="group"><button type="button" data-v="annuity" aria-pressed="true">Аннуитетный</button><button type="button" data-v="diff" aria-pressed="false">Дифференцированный</button></div></div>
+        </form>
+        <div class="result-card" aria-live="polite">
+          <span class="eyebrow">Ежемесячный платёж</span>
+          <div class="big" id="m-pay">—</div>
+          <div class="range" id="m-range"></div>
+          <div class="bar-track" aria-hidden="true"><i id="m-bar-p" style="background:var(--accent)"></i><i id="m-bar-i" style="background:var(--gold)"></i></div>
+          <div class="legend"><span><i style="background:var(--accent)"></i>Основной долг</span><span><i style="background:var(--gold)"></i>Проценты</span></div>
+          <div class="lines" id="m-lines"></div>
+          <button class="btn" type="button" data-lead="mortgage" data-title="Подобрать ипотеку">Подобрать программу и банк</button>
+        </div>
+      </div>
+      <div class="panel-box">
+        <div class="row between" style="margin-bottom:10px"><h3>Остаток долга по годам</h3><button class="btn ghost sm" type="button" id="m-toggle">Таблица по годам</button></div>
+        <svg class="chart" id="m-chart" viewBox="0 0 800 220" role="img" aria-label="График остатка долга"></svg>
+        <div class="table-wrap" id="m-table" hidden style="margin-top:12px"></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section calc-sec band" id="afford">
+    <div class="wrap stack" style="gap:20px">
+      <div class="titles stack" style="gap:8px"><span class="eyebrow accent">Бюджет</span><h2>Сколько может одобрить банк</h2>
+        <p class="muted">Банки обычно ограничивают платёж по всем займам примерно половиной дохода семьи. Точный лимит зависит от банка, кредитной истории и программы.</p></div>
+      <div class="calc">
+        <form class="panel-box form-grid" id="a-form">
+          <div class="field"><label for="a-income">Доход семьи в месяц, ₸</label><input class="input" id="a-income" inputmode="numeric" value="700 000"></div>
+          <div class="field"><label for="a-debts">Платежи по другим займам, ₸</label><input class="input" id="a-debts" inputmode="numeric" value="0"></div>
+          <div class="field"><label for="a-share">Доля дохода на платёж, %</label><input class="input" id="a-share" inputmode="decimal" value="50"></div>
+          <div class="field"><label for="a-own">Свои деньги на взнос, ₸</label><input class="input" id="a-own" inputmode="numeric" value="7 000 000"></div>
+          <div class="field"><label for="a-rate">Ставка, %</label><input class="input" id="a-rate" inputmode="decimal" value="9"></div>
+          <div class="field"><label for="a-years">Срок, лет</label><input class="input" id="a-years" inputmode="numeric" value="19"></div>
+        </form>
+        <div class="result-card" aria-live="polite">
+          <span class="eyebrow">Можно рассчитывать на жильё до</span>
+          <div class="big" id="a-total">—</div>
+          <div class="lines" id="a-lines"></div>
+          <a class="btn" href="catalog.html" id="a-go">Подобрать квартиры в бюджете</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section calc-sec" id="tax">
+    <div class="wrap stack" style="gap:20px">
+      <div class="titles stack" style="gap:8px"><span class="eyebrow accent">Налоговый кодекс 2026</span><h2>Налог при продаже недвижимости</h2>
+        <p class="muted">ИПН платится с прироста стоимости, если не выдержан минимальный срок владения: 1 год — для права, зарегистрированного до 01.01.2026, 2 года — после.</p></div>
+      <div class="calc">
+        <form class="panel-box form-grid" id="t-form">
+          <div class="field full"><label for="t-how">Как получено жильё</label><select class="input" id="t-how">
+            <option value="buy">Куплено</option><option value="inherit">Наследство</option><option value="gift">Дарение</option></select></div>
+          <div class="field"><label for="t-buy" id="t-buy-l">Цена покупки, ₸</label><input class="input" id="t-buy" inputmode="numeric" value="30 000 000"></div>
+          <div class="field"><label for="t-sell">Цена продажи, ₸</label><input class="input" id="t-sell" inputmode="numeric" value="38 000 000"></div>
+          <div class="field"><label for="t-reg">Дата регистрации права</label><input class="input" id="t-reg" type="date" value="2026-03-10"></div>
+          <div class="field"><label for="t-date">Дата продажи</label><input class="input" id="t-date" type="date"></div>
+          <p class="form-note full" id="t-hint"></p>
+        </form>
+        <div class="result-card" aria-live="polite">
+          <span class="eyebrow">ИПН к уплате</span>
+          <div class="big" id="t-tax">—</div>
+          <div class="range" id="t-sub"></div>
+          <div class="lines" id="t-lines"></div>
+          <a class="btn ghost" id="t-article" href="article.html?slug=nalog-pri-prodazhe-2026">Подробно о налоге</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section calc-sec band" id="costs">
+    <div class="wrap stack" style="gap:20px">
+      <div class="titles stack" style="gap:8px"><span class="eyebrow accent">Оформление</span><h2>Расходы на сделку купли-продажи</h2>
+        <p class="muted" id="c-mrp"></p></div>
+      <div class="calc">
+        <form class="panel-box form-grid" id="c-form">
+          <div class="field full"><label for="c-price">Цена объекта, ₸</label><input class="input" id="c-price" inputmode="numeric" value="35 000 000"></div>
+          <div class="field"><label for="c-where">Где оформляем</label><select class="input" id="c-where"><option value="notary">У нотариуса</option><option value="con">В ЦОН</option></select></div>
+          <div class="field"><label for="c-parties">Стороны</label><select class="input" id="c-parties"><option value="nonrel">Не родственники</option><option value="rel">Близкие родственники</option><option value="legal">Одна сторона — юрлицо</option></select></div>
+          <div class="field"><label for="c-comm">Комиссия агентства, %</label><input class="input" id="c-comm" inputmode="decimal" value="1.5"></div>
+          <div class="field" style="justify-content:flex-end;gap:10px">
+            <label class="check"><input type="checkbox" id="c-spouse" checked> Согласие супруга</label>
+            <label class="check"><input type="checkbox" id="c-mort"> Покупка в ипотеку</label>
+            <label class="check"><input type="checkbox" id="c-fast"> Ускоренная регистрация</label>
+          </div>
+        </form>
+        <div class="result-card" aria-live="polite">
+          <span class="eyebrow">Итого расходов</span>
+          <div class="big" id="c-total">—</div>
+          <div class="lines" id="c-lines"></div>
+          <p class="xs" style="opacity:.75">Тарифы нотариусов и госпошлина — по данным на 2026 год; кто платит — по договорённости сторон.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section calc-sec" id="yield">
+    <div class="wrap stack" style="gap:20px">
+      <div class="titles stack" style="gap:8px"><span class="eyebrow accent">Инвестиции</span><h2>Доходность аренды и окупаемость</h2></div>
+      <div class="calc">
+        <form class="panel-box form-grid" id="y-form">
+          <div class="field"><label for="y-price">Стоимость объекта, ₸</label><input class="input" id="y-price" inputmode="numeric" value="30 000 000"></div>
+          <div class="field"><label for="y-rent">Аренда в месяц, ₸</label><input class="input" id="y-rent" inputmode="numeric" value="200 000"></div>
+          <div class="field"><label for="y-costs">Расходы собственника в месяц, ₸</label><input class="input" id="y-costs" inputmode="numeric" value="15 000"></div>
+          <div class="field"><label for="y-vac">Простой, месяцев в году</label><input class="input" id="y-vac" inputmode="decimal" value="1"></div>
+          <div class="field"><label for="y-tax">Налог с дохода, %</label><input class="input" id="y-tax" inputmode="decimal" value="10"></div>
+        </form>
+        <div class="result-card" aria-live="polite">
+          <span class="eyebrow">Чистая доходность в год</span>
+          <div class="big" id="y-net">—</div>
+          <div class="lines" id="y-lines"></div>
+          <button class="btn" type="button" data-lead="consult" data-title="Подобрать объект под аренду">Подобрать объект под аренду</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section calc-sec band" id="programs">
+    <div class="wrap stack" style="gap:20px">
+      <div class="titles stack" style="gap:8px"><span class="eyebrow">Справочник</span><h2>Ипотечные программы</h2></div>
+      <div class="table-wrap"><table class="t">
+        <thead><tr><th>Программа</th><th>Ставка</th><th class="num">Взнос</th><th class="num">Срок</th><th>Лимит</th><th>Жильё</th><th>Кто может</th></tr></thead>
+        <tbody id="p-rows"></tbody>
+      </table></div>
+      <p class="form-note" id="p-note"></p>
+    </div>
+  </section>
+</main>
+<footer id="site-footer"></footer>
+<script type="module">
+import { boot, db, esc, num, money, moneyShort, link, mortgage, saleTax, dealCosts, rentYield, fmtDateRu } from './app.js';
+boot(async (s) => {
+  const $ = id => document.getElementById(id);
+  const n = v => Number(String(v).replace(/\s/g, '').replace(',', '.')) || 0;
+  const line = (k, v) => `<div class="line"><span>${esc(k)}</span><b>${v}</b></div>`;
+  const programs = await db.list('mortgage_programs', { eq: { is_active: true }, order: 'sort' });
+  const f = s.finance;
+
+  // ---- Ипотека ----
+  let mType = 'annuity', tableOpen = false;
+  $('m-progs').innerHTML = programs.filter(p => p.rate).map(p => `<button type="button" class="chip" data-p="${p.id}">${esc(p.name)} · ${num(p.rate, 1)}%</button>`).join('');
+  $('m-progs').addEventListener('click', e => {
+    const b = e.target.closest('[data-p]'); if (!b) return;
+    const p = programs.find(x => String(x.id) === b.dataset.p);
+    $('m-rate').value = p.rate; if (p.term_years) $('m-years').value = p.term_years;
+    if (p.down_payment_pct !== null && n($('m-down').value) < p.down_payment_pct) $('m-down').value = p.down_payment_pct;
+    document.querySelectorAll('#m-progs .chip').forEach(c => c.setAttribute('aria-pressed', c === b));
+    calcM();
+  });
+  $('m-type').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; mType = b.dataset.v; document.querySelectorAll('#m-type button').forEach(x => x.setAttribute('aria-pressed', x === b)); calcM(); });
+  function chart(schedule, loan) {
+    const W = 800, H = 220, L = 70, B = 28, T = 12, R = 12;
+    const years = schedule.length;
+    const x = i => L + (W - L - R) * (i / years);
+    const y = v => T + (H - T - B) * (1 - v / loan);
+    const pts = [[0, loan], ...schedule.map((r, i) => [i + 1, r.balance])];
+    const path = pts.map(([i, v], k) => `${k ? 'L' : 'M'}${x(i).toFixed(1)} ${y(v).toFixed(1)}`).join(' ');
+    const area = `${path} L${x(years)} ${y(0)} L${x(0)} ${y(0)} Z`;
+    const ticksY = [0, 0.25, 0.5, 0.75, 1].map(k => k * loan);
+    const step = years > 20 ? 5 : years > 10 ? 2 : 1;
+    let ticksX = ''; for (let i = 0; i <= years; i += step) ticksX += `<text x="${x(i)}" y="${H - 8}" text-anchor="middle">${i}</text>`;
+    $('m-chart').innerHTML = `<g class="grid">${ticksY.map(v => `<line x1="${L}" x2="${W - R}" y1="${y(v)}" y2="${y(v)}"/>`).join('')}</g>
+      ${ticksY.map(v => `<text x="${L - 8}" y="${y(v) + 4}" text-anchor="end">${moneyShort(v)}</text>`).join('')}
+      ${ticksX}<text x="${W - R}" y="${H - 8}" text-anchor="end">лет</text>
+      <path d="${area}" fill="var(--accent-soft)"/><path d="${path}" fill="none" stroke="var(--accent)" stroke-width="2.5"/>
+      <circle cx="${x(0)}" cy="${y(loan)}" r="4" fill="var(--accent)"/>`;
+  }
+  function calcM() {
+    const price = n($('m-price').value);
+    const r = mortgage({ price, down: price * n($('m-down').value) / 100, rate: n($('m-rate').value), years: n($('m-years').value), type: mType });
+    if (!r) { $('m-pay').textContent = '—'; return; }
+    $('m-pay').textContent = money(r.first);
+    $('m-range').textContent = mType === 'diff' ? `первый платёж, последний — ${money(r.last)}` : 'одинаковый весь срок';
+    const share = r.loan / r.total * 100;
+    $('m-bar-p').style.width = share + '%'; $('m-bar-i').style.width = (100 - share) + '%';
+    $('m-lines').innerHTML = line('Сумма займа', money(r.loan)) + line('Переплата (проценты)', money(r.overpay)) + line('Всего выплат', money(r.total)) +
+      line('Рекомендуемый доход семьи', `от ${money(r.first * 2)}`);
+    chart(r.schedule, r.loan);
+    $('m-table').innerHTML = `<table class="t"><thead><tr><th>Год</th><th class="num">Платежи</th><th class="num">Проценты</th><th class="num">Основной долг</th><th class="num">Остаток</th></tr></thead><tbody>${
+      r.schedule.map(y => `<tr><td>${y.year}</td><td class="num">${money(y.paid)}</td><td class="num">${money(y.interest)}</td><td class="num">${money(y.principal)}</td><td class="num">${money(y.balance)}</td></tr>`).join('')}</tbody></table>`;
+  }
+  $('m-toggle').addEventListener('click', () => { tableOpen = !tableOpen; $('m-table').hidden = !tableOpen; $('m-toggle').textContent = tableOpen ? 'Скрыть таблицу' : 'Таблица по годам'; });
+  $('m-form').addEventListener('input', calcM); $('m-form').addEventListener('submit', e => e.preventDefault());
+  calcM();
+
+  // ---- Сколько одобрит банк ----
+  function calcA() {
+    const pay = Math.max(0, n($('a-income').value) * n($('a-share').value) / 100 - n($('a-debts').value));
+    const r = n($('a-rate').value) / 100 / 12, m = n($('a-years').value) * 12;
+    const loan = r ? pay * (1 - Math.pow(1 + r, -m)) / r : pay * m;
+    const total = loan + n($('a-own').value);
+    const minDown = total ? n($('a-own').value) / total * 100 : 0;
+    $('a-total').textContent = money(Math.round(total / 100000) * 100000);
+    $('a-lines').innerHTML = line('Допустимый платёж', money(pay) + ' / мес') + line('Возможный заём', money(Math.round(loan / 100000) * 100000)) +
+      line('Ваш взнос', `${money(n($('a-own').value))} · ${num(minDown, 0)}%`) + (minDown < 20 ? line('Внимание', 'по многим программам взнос от 20%') : '');
+    $('a-go').href = link('catalog.html', { deal: 'sale', max: Math.round(total) });
+  }
+  $('a-form').addEventListener('input', calcA); $('a-form').addEventListener('submit', e => e.preventDefault());
+  calcA();
+
+  // ---- Налог ----
+  $('t-date').value = new Date().toISOString().slice(0, 10);
+  $('t-article').href = link('article.html', { slug: 'nalog-pri-prodazhe-2026' });
+  function calcT() {
+    const how = $('t-how').value;
+    $('t-buy-l').textContent = how === 'buy' ? 'Цена покупки, ₸' : how === 'inherit' ? 'Стоимость по отчёту об оценке, ₸' : 'Оценочная стоимость для налога на имущество, ₸';
+    $('t-hint').textContent = how === 'inherit'
+      ? 'Для наследства первоначальная стоимость — рыночная по отчёту об оценке на дату возникновения права. Без отчёта прирост может быть посчитан почти со всей цены.'
+      : how === 'gift' ? 'Для подаренного жилья первоначальная стоимость — оценочная стоимость для налога на имущество на 1 января года получения.' : '';
+    const r = saleTax({ buy: n($('t-buy').value), sell: n($('t-sell').value), regDate: $('t-reg').value, saleDate: $('t-date').value,
+      mrp: f.mrp, threshold: f.ipn_threshold_mrp, rate: f.ipn_rate, rateHigh: f.ipn_rate_high });
+    if (!r) { $('t-tax').textContent = '—'; return; }
+    $('t-tax').textContent = money(r.tax);
+    $('t-sub').textContent = r.exempt ? `налога нет: срок владения ${r.minYears} ${r.minYears === 1 ? 'год' : 'года'} выдержан` : r.gain ? `продажа раньше ${fmtDateRu(r.exemptFrom.toISOString().slice(0, 10))}` : 'прироста нет — налога нет';
+    $('t-lines').innerHTML = line('Прирост стоимости', money(r.gain)) + line('Минимальный срок владения', `${r.minYears} ${r.minYears === 1 ? 'год' : 'года'}`) +
+      line('Без налога с даты', fmtDateRu(r.exemptFrom.toISOString().slice(0, 10))) +
+      line(`Ставка ${f.ipn_rate}% до ${num(f.ipn_threshold_mrp)} МРП`, money(r.limit)) +
+      (!r.exempt && r.tax ? line('Декларация 270.00 до', r.declBy) + line('Уплата до', r.payBy) : '');
+  }
+  $('t-form').addEventListener('input', calcT); $('t-form').addEventListener('change', calcT); $('t-form').addEventListener('submit', e => e.preventDefault());
+  calcT();
+
+  // ---- Расходы ----
+  $('c-mrp').textContent = `Расчёт по МРП ${f.year} года — ${num(f.mrp)} ₸. Нотариус не обязателен: договор можно оформить в ЦОН или через eGov.`;
+  function calcC() {
+    const notary = $('c-where').value === 'notary';
+    $('c-parties').disabled = !notary;
+    const r = dealCosts({ price: n($('c-price').value), notary, parties: $('c-parties').value, spouse: $('c-spouse').checked, mortgageOn: $('c-mort').checked, fast: $('c-fast').checked, commissionPct: n($('c-comm').value) }, f);
+    $('c-total').textContent = money(r.total);
+    $('c-lines').innerHTML = r.items.map(i => `<div class="line"><span>${esc(i.label)}<span class="xs" style="display:block;opacity:.7">${esc(i.who)}</span></span><b>${money(i.value)}</b></div>`).join('');
+  }
+  $('c-form').addEventListener('input', calcC); $('c-form').addEventListener('change', calcC); $('c-form').addEventListener('submit', e => e.preventDefault());
+  calcC();
+
+  // ---- Доходность ----
+  function calcY() {
+    const r = rentYield({ price: n($('y-price').value), rent: n($('y-rent').value), costs: n($('y-costs').value), vacancy: n($('y-vac').value), taxPct: n($('y-tax').value) });
+    if (!r) { $('y-net').textContent = '—'; return; }
+    $('y-net').textContent = num(r.net, 1) + '%';
+    $('y-lines').innerHTML = line('Валовая доходность', num(r.gross, 1) + '%') + line('Чистый доход в год', money(r.netYear)) +
+      line('Окупаемость', isFinite(r.payback) ? `${num(r.payback, 1)} лет` : 'не окупается');
+  }
+  $('y-form').addEventListener('input', calcY); $('y-form').addEventListener('submit', e => e.preventDefault());
+  calcY();
+
+  // ---- Программы ----
+  $('p-rows').innerHTML = programs.map(p => `<tr><td><b>${esc(p.name)}</b><div class="xs muted">${esc(p.bank || '')}</div></td><td>${esc(p.rate_text || (p.rate ? p.rate + '%' : ''))}</td>
+    <td class="num">${p.down_payment_pct !== null ? 'от ' + num(p.down_payment_pct) + '%' : '—'}</td><td class="num">${p.term_years ? 'до ' + p.term_years + ' лет' : '—'}</td>
+    <td>${esc(p.max_amount_text || (p.max_amount ? money(p.max_amount) : ''))}</td><td>${esc(p.housing || '')}</td><td class="muted">${esc(p.who || '')}${p.notes ? `<div class="xs">${esc(p.notes)}</div>` : ''}</td></tr>`).join('');
+  const checked = programs.map(p => p.checked_at).filter(Boolean).sort().pop();
+  $('p-note').textContent = `Данные проверены ${checked ? fmtDateRu(checked) : 'недавно'}. Условия программ меняются — уточняйте на сайтах банков или у нашего ипотечного брокера.`;
+  if (location.hash) setTimeout(() => document.getElementById(location.hash.slice(1))?.scrollIntoView(), 30);
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="claude:viewport-fit-sides" content="cover">
+<title>Услуги и цены · Qadam</title>
+<meta name="description" content="Подбор и продажа недвижимости, аренда, коммерческая недвижимость, проверка юридической чистоты, сопровождение сделок, ипотечный брокер и оценка. Цены и состав услуг.">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Unbounded:wght@500;600;700&display=swap">
+<link rel="stylesheet" href="styles.css">
+<style>
+  .svc-nav { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 4px; }
+  .svc-group { scroll-margin-top: calc(var(--header-h) + 24px); }
+  .svc-group + .svc-group { margin-top: 48px; }
+  .svc { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr) 210px; gap: 20px 28px; padding: 22px 0; border-top: 1px solid var(--line); scroll-margin-top: calc(var(--header-h) + 24px); }
+  .svc:target { background: linear-gradient(90deg, var(--accent-soft), transparent 60%); }
+  .svc .ico { width: 30px; height: 30px; color: var(--accent); }
+  .svc h3 { font-size: var(--fs-lg); }
+  .svc ul { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 6px; font-size: var(--fs-sm); }
+  .svc li { display: flex; gap: 8px; }
+  .svc li::before { content: ""; width: 6px; height: 6px; margin-top: .55em; border-radius: 1px; background: var(--accent); flex: none; }
+  .svc .side { display: flex; flex-direction: column; gap: 8px; align-items: flex-start; }
+  .svc .price { font: 600 var(--fs-md)/1.35 var(--font-mono); color: var(--ink); }
+  @media (max-width: 900px) { .svc { grid-template-columns: minmax(0, 1fr); } }
+</style>
+</head>
+<body data-page="services">
+<header id="site-header"></header>
+<main>
+  <section class="page-head">
+    <div class="wrap">
+      <nav class="crumbs" aria-label="Навигация"><a href="index.html">Главная</a><span>/</span><span>Услуги</span></nav>
+      <h1>Услуги и цены</h1>
+      <p>Работаем по договору. Комиссию, состав работ и момент оплаты фиксируем письменно до первого показа — без предоплат за показы и скрытых платежей.</p>
+      <nav class="svc-nav" id="svc-nav" aria-label="Категории услуг"></nav>
+    </div>
+  </section>
+  <section class="section tight">
+    <div class="wrap" id="groups"><p class="muted">Загружаем услуги…</p></div>
+  </section>
+  <section class="section band">
+    <div class="wrap grid g2" style="gap:32px;align-items:center">
+      <div class="stack"><span class="eyebrow">Почему с агентством</span><h2>Что вы получаете за комиссию</h2>
+        <p class="muted">Риэлторская деятельность в Казахстане пока не лицензируется, поэтому главная гарантия — договор и прозрачная работа. Мы показываем, что сделано по вашему объекту, и отвечаем за проверку документов.</p></div>
+      <ul class="checklist" id="value-list"></ul>
+    </div>
+  </section>
+</main>
+<footer id="site-footer"></footer>
+<script type="module">
+import { boot, db, esc, money, icon, SERVICE_CAT, openLead } from './app.js';
+boot(async () => {
+  const services = await db.list('services', { eq: { is_active: true }, order: 'sort' });
+  const groups = {};
+  for (const s of services) (groups[s.category] = groups[s.category] || []).push(s);
+  const order = Object.keys(SERVICE_CAT).filter(k => groups[k]).concat(Object.keys(groups).filter(k => !SERVICE_CAT[k]));
+  document.getElementById('svc-nav').innerHTML = order.map(k => `<a class="chip" href="#${k}">${esc(SERVICE_CAT[k] || k)}</a>`).join('');
+  document.getElementById('groups').innerHTML = order.map(k => `<div class="svc-group" id="${k}">
+    <div class="section-head" style="margin-bottom:8px"><div class="titles"><span class="eyebrow">${esc(SERVICE_CAT[k] || k)}</span></div></div>
+    ${groups[k].map(s => `<article class="svc" id="${esc(s.slug)}">
+      <div class="stack" style="gap:10px">${icon(s.icon || 'key', 'ico')}<h3>${esc(s.title)}</h3><p class="muted">${esc(s.description || s.short || '')}</p></div>
+      <div>${(s.includes || []).length ? `<span class="eyebrow">Что входит</span><ul style="margin-top:10px">${s.includes.map(i => `<li>${esc(i)}</li>`).join('')}</ul>` : ''}</div>
+      <div class="side">
+        <span class="eyebrow">Стоимость</span>
+        <span class="price">${esc(s.price_text || (s.price_from ? 'от ' + money(s.price_from) : 'по договорённости'))}</span>
+        ${s.duration ? `<span class="small muted">${icon('clock')} ${esc(s.duration)}</span>` : ''}
+        ${s.category === 'valuation' ? `<a class="btn sm" href="valuation.html">Рассчитать и заказать</a>` : `<button class="btn sm" type="button" data-svc="${s.id}">Заказать</button>`}
+      </div></article>`).join('')}
+  </div>`).join('');
+  document.getElementById('groups').addEventListener('click', e => {
+    const b = e.target.closest('[data-svc]'); if (!b) return;
+    const s = services.find(x => String(x.id) === b.dataset.svc);
+    const kind = { buy: 'buy', sell: 'sell', rent: s.slug === 'snyat-kvartiru' ? 'rent' : 'rent_out', legal: 'legal', mortgage: 'mortgage', commercial: 'consult' }[s.category] || 'consult';
+    openLead({ kind, service_id: s.id, title: s.title, subtitle: s.price_text || '' });
+  });
+  if (location.hash) setTimeout(() => document.getElementById(decodeURIComponent(location.hash.slice(1)))?.scrollIntoView(), 30);
+  document.getElementById('value-list').innerHTML = [
+    ['Цена по рынку, а не «на глаз»', 'Анализ сделок и аналогов, онлайн-оценка и отчёт оценщика при необходимости.'],
+    ['Проверка объекта и сторон', 'Обременения, аресты, долги, согласие супруга, права детей, доверенности.'],
+    ['Безопасные расчёты', 'Банковская ячейка, перевод после регистрации, депозит нотариуса.'],
+    ['Экономия времени', 'Показы, переговоры, документы, нотариус и ЦОН — без вашего участия там, где это возможно.'],
+    ['Всё в договоре', 'Сумма комиссии, кто и когда платит, перечень работ и срок.']
+  ].map(([t, n]) => `<li><span>${icon('check')}</span><div><div class="t">${esc(t)}</div><div class="n">${esc(n)}</div></div></li>`).join('');
+});
+</script>
+</body>
+</html>
