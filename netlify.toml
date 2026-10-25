@@ -1,4 +1,0 @@
-# Отдельный сайт Netlify: Base directory = realty.
-# Заголовки — в public/_headers (этот же файл понимает и Cloudflare Pages).
-[build]
-  publish = "public"
