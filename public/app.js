@@ -757,6 +757,19 @@ export async function openLead(opts = {}) {
   });
   return { close };
 }
+// В предпросмотре (окно внутри другой страницы) ссылки tel: и mailto: не открывают звонилку,
+// а уводят всё окно на пустую страницу. Там вместо перехода копируем номер или адрес.
+if (CONFIG.preview) {
+  document.addEventListener('click', e => {
+    const a = e.target.closest('a[href^="tel:"], a[href^="mailto:"]');
+    if (!a) return;
+    e.preventDefault();
+    const value = decodeURIComponent(a.getAttribute('href').replace(/^(tel|mailto):/, ''));
+    const shown = a.href.startsWith('tel:') ? formatPhone(value) : value;
+    const done = () => toast(`Скопировано: ${shown}. На настоящем сайте здесь откроется ${a.href.startsWith('tel:') ? 'звонок' : 'почта'}.`);
+    navigator.clipboard?.writeText(shown).then(done, () => toast(shown)) ?? toast(shown);
+  }, true);
+}
 // Кнопки с data-lead="kind" открывают форму без отдельного кода на странице
 document.addEventListener('click', e => {
   const b = e.target.closest('[data-lead]');

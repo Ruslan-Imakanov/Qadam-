@@ -58,12 +58,17 @@ finratings.kz, inform.kz, zakon.kz, tengrinews.kz, kapital.kz, nur.kz):
 Пока поля пустые, сайт работает в **демо-режиме** на `data/demo.json`: всё кликается, заявки и правки
 сохраняются только в браузере.
 
-### 3. Хостинг (Netlify)
+### 3. Хостинг
 
-Вариант А — из этого репозитория: Add new site → Import from Git → `Ruslan-Imakanov/tabel`,
+**Cloudflare Pages (рекомендуется — бесплатно, без лимита деплоев).** Один раз подключить репозиторий,
+после этого каждый `git push` в выбранную ветку сам выкладывает сайт:
+Cloudflare → Workers & Pages → Create → Pages → Connect to Git → `Ruslan-Imakanov/tabel` →
+Production branch: `main` (или рабочая ветка) → Framework preset: None, Build command: пусто,
+**Build output directory: `realty/public`**. Заголовки берутся из `public/_headers`.
+
+**Netlify.** Вариант А — из этого репозитория: Add new site → Import from Git → `Ruslan-Imakanov/tabel`,
 **Base directory: `realty`**, Publish directory: `realty/public` (настройки уже в `realty/netlify.toml`).
 Это отдельный сайт, к «Табелю» не относится.
-
 Вариант Б — перетащить папку `realty/public` в Netlify Drop.
 
 Локально: `cd realty/public && python3 -m http.server 8080` → http://localhost:8080.

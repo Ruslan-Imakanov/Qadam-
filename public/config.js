@@ -10,5 +10,7 @@ export const CONFIG = {
   supabaseKey: '',
   // true — ссылки вида object.html#12 вместо object.html?id=12
   // (нужно только для предпросмотра там, где параметры адреса не передаются)
-  hashLinks: false
+  hashLinks: false,
+  // true — режим предпросмотра: ссылки tel:/mailto: копируют номер вместо перехода
+  preview: false
 };
