@@ -214,23 +214,30 @@ svg.ic { width: 1.1em; height: 1.1em; vertical-align: -0.18em; flex: none; }
 .logo-mark { width: 34px; height: 34px; flex: none; }
 .logo-name { font: 700 1.05rem/1 var(--font-display); letter-spacing: .02em; }
 .logo-sub { display: block; font: 500 10px/1.2 var(--font-mono); text-transform: uppercase; letter-spacing: .1em; color: var(--ink-3); margin-top: 3px; }
-.main-nav { display: flex; gap: 2px; flex: 1; min-width: 0; }
+.main-nav { display: flex; gap: 2px; flex: 1; min-width: 0; overflow: hidden; }
 .main-nav a {
   padding: 8px 10px; border-radius: var(--r-sm); color: var(--ink-2); text-decoration: none;
-  font-size: var(--fs-sm); font-weight: 500; white-space: nowrap;
+  font-size: var(--fs-sm); font-weight: 500; white-space: nowrap; flex: none;
+  transition: color .15s, background-color .15s;
 }
 .main-nav a:hover { color: var(--ink); background: var(--surface-2); }
 .main-nav a[aria-current="page"] { color: var(--accent); background: var(--accent-soft); }
-.header-tools { display: flex; align-items: center; gap: 8px; margin-left: auto; }
-.header-phone { display: flex; flex-direction: column; align-items: flex-end; text-decoration: none; color: var(--ink); line-height: 1.2; }
-.header-phone b { font: 600 var(--fs-sm)/1.2 var(--font-mono); white-space: nowrap; }
-.header-phone span { font-size: 11px; color: var(--ink-3); }
+.header-tools { display: flex; align-items: center; gap: 8px; margin-left: auto; flex: none; }
 .burger { display: none; }
-@media (max-width: 1380px) { .header-phone { display: none; } }
-@media (max-width: 1080px) {
+@media (max-width: 1180px) {
   .main-nav { display: none; }
   .burger { display: inline-grid; }
 }
+
+/* Верхняя строка с контактами: телефон живёт здесь и не спорит с меню за место */
+.topbar { background: var(--surface-2); color: var(--ink-2); font-size: var(--fs-xs); border-bottom: 1px solid var(--line); }
+.topbar .wrap { display: flex; align-items: center; justify-content: space-between; gap: 6px 20px; min-height: 36px; flex-wrap: wrap; }
+.topbar .group { display: flex; align-items: center; gap: 6px 18px; flex-wrap: wrap; min-width: 0; }
+.topbar a { color: var(--ink-2); text-decoration: none; display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
+.topbar a:hover { color: var(--accent); }
+.topbar .tel { color: var(--ink); font: 600 var(--fs-sm)/1 var(--font-mono); }
+.topbar .sep { width: 1px; height: 14px; background: var(--line-strong); }
+@media (max-width: 760px) { .topbar { display: none; } }
 .mobile-menu {
   position: fixed; inset: 0; z-index: 80; background: var(--overlay);
   display: flex; justify-content: flex-end;
@@ -336,6 +343,8 @@ textarea.input { min-height: 96px; resize: vertical; }
 .input-group .input { min-width: 0; }
 .check { display: flex; gap: 10px; align-items: flex-start; font-size: var(--fs-sm); color: var(--ink-2); cursor: pointer; }
 .check input { width: 18px; height: 18px; margin: 2px 0 0; accent-color: var(--accent); flex: none; }
+.field > label.check { font: 400 var(--fs-sm)/1.45 var(--font-body); text-transform: none; letter-spacing: 0; color: var(--ink-2); }
+.checks-row { flex-direction: row; flex-wrap: wrap; align-items: flex-end; align-content: flex-end; gap: 10px 16px; }
 .form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
 .form-grid .full { grid-column: 1 / -1; }
 @media (max-width: 560px) { .form-grid { grid-template-columns: minmax(0, 1fr); } }
@@ -570,7 +579,10 @@ details.qa .a { padding: 0 0 18px; color: var(--ink-2); max-width: 75ch; }
 @media (max-width: 860px) { .site-footer .cols { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (max-width: 520px) { .site-footer .cols { grid-template-columns: minmax(0, 1fr); } }
 
-.demo-ribbon { background: var(--gold-soft); color: var(--gold); font-size: var(--fs-xs); text-align: center; padding: 6px 16px; }
+.demo-ribbon { background: var(--gold-soft); color: var(--gold); font-size: var(--fs-xs); }
+.demo-ribbon .wrap { display: flex; align-items: center; justify-content: center; gap: 12px; min-height: 30px; text-align: center; }
+.demo-ribbon button { border: 0; background: none; color: inherit; cursor: pointer; font-size: 15px; line-height: 1; padding: 4px; opacity: .8; }
+.demo-ribbon button:hover { opacity: 1; }
 
 /* ---------- Админка ---------- */
 .admin { display: grid; grid-template-columns: 236px minmax(0, 1fr); min-height: 100vh; }
@@ -621,6 +633,102 @@ details.qa .a { padding: 0 0 18px; color: var(--ink-2); max-width: 75ch; }
   .admin-main { padding: 16px var(--gutter-r) 48px var(--gutter-l); }
   .lead-row { grid-template-columns: minmax(0, 1fr); }
   .lead-actions { align-items: stretch; flex-direction: row; flex-wrap: wrap; }
+}
+
+/* Пока скрипт не нарисовал шапку — держим её место, чтобы страница не подпрыгивала */
+#site-header:empty { display: block; min-height: calc(var(--header-h) + 37px); background: var(--surface); border-bottom: 1px solid var(--line); }
+@media (max-width: 760px) { #site-header:empty { min-height: calc(var(--header-h) + 1px); } }
+
+/* Скелетоны на время загрузки */
+.skel { background: var(--surface-2); border-radius: 6px; }
+.card.skeleton { pointer-events: none; }
+.card.skeleton .card-media { aspect-ratio: 4 / 3; }
+.card.skeleton .card-body { gap: 10px; }
+
+/* ============================================================
+   Движение. Всё читается и без анимаций: эффекты только украшают,
+   а при системной настройке «уменьшить движение» отключаются целиком.
+   ============================================================ */
+@view-transition { navigation: auto; }
+::view-transition-old(root), ::view-transition-new(root) { animation-duration: .28s; }
+.site-header { view-transition-name: site-header; }
+
+@keyframes q-rise { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: none; } }
+@keyframes q-fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes q-pop { from { opacity: 0; transform: translateY(12px) scale(.94); } to { opacity: 1; transform: none; } }
+@keyframes q-draw { to { stroke-dashoffset: 0; } }
+@keyframes q-beat { 0% { transform: scale(1); } 35% { transform: scale(1.35); } 70% { transform: scale(.9); } 100% { transform: scale(1); } }
+@keyframes q-shimmer { from { background-position: 150% 0; } to { background-position: -150% 0; } }
+@keyframes q-slide-in { from { transform: translateX(100%); } to { transform: none; } }
+@keyframes q-sheet-in { from { opacity: 0; transform: translateY(22px) scale(.98); } to { opacity: 1; transform: none; } }
+@keyframes q-ring { 0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent) 50%, transparent); } 100% { box-shadow: 0 0 0 12px transparent; } }
+
+@media (prefers-reduced-motion: no-preference) {
+  /* Открытие страницы: заголовок и первые блоки поднимаются по очереди */
+  .hero-copy > *, .page-head .wrap > * { animation: q-rise .7s cubic-bezier(.2, .75, .25, 1) both; }
+  .hero-copy > :nth-child(2), .page-head .wrap > :nth-child(2) { animation-delay: .07s; }
+  .hero-copy > :nth-child(3), .page-head .wrap > :nth-child(3) { animation-delay: .14s; }
+  .hero-copy > :nth-child(4), .page-head .wrap > :nth-child(4) { animation-delay: .21s; }
+  .hero-copy > :nth-child(5), .page-head .wrap > :nth-child(5) { animation-delay: .28s; }
+  .hero-copy > :nth-child(6), .page-head .wrap > :nth-child(6) { animation-delay: .35s; }
+
+  /* Главная: планировка вычерчивается линиями, как в техпаспорте, затем появляется онлайн-оценка */
+  .hero-plan .plan :is(path, rect, polygon, circle) { stroke-dasharray: 1400; stroke-dashoffset: 1400; animation: q-draw 1.9s cubic-bezier(.45, 0, .2, 1) .25s forwards; }
+  .hero-plan .plan text { animation: q-fade .6s ease 1.35s both; }
+  .hero-plan .est { animation: q-pop .65s cubic-bezier(.2, .8, .2, 1.25) 1.75s both; }
+  .gallery-main > img, .gallery-main > .plan { animation: q-fade .35s ease both; }
+
+  /* Блоки ниже первого экрана проявляются при прокрутке — без скриптов, на scroll-driven анимациях */
+  @supports (animation-timeline: view()) {
+    main :is(.section-head, .cards > .card, .tiles > .tile, .steps > .step, .article-cards > *, .val-cat, .vt, .svc, details.qa,
+      .team > *, .grid > .panel-box, .calc > *, .contact-grid > *, .passport .pr, .checklist li) {
+      animation: q-rise linear both;
+      animation-timeline: view();
+      animation-range: entry 0% entry 32%;
+    }
+  }
+
+  /* Карточки и плитки отзываются на наведение */
+  .card { transition: transform .35s cubic-bezier(.2, .8, .2, 1), box-shadow .35s, border-color .35s; }
+  .card:hover { transform: translateY(-4px); }
+  .card-media > img, .card-media > .plan { transition: transform .7s cubic-bezier(.2, .8, .2, 1); }
+  .card:hover .card-media > img, .card:hover .card-media > .plan { transform: scale(1.05); }
+  .tile { transition: background-color .25s; }
+  .tile .ico { transition: transform .35s cubic-bezier(.2, .8, .2, 1.4); }
+  .tile:hover .ico { transform: translateY(-3px) rotate(-6deg); }
+  .article-card, .val-cat, .kpi { transition: border-color .25s, transform .3s, color .2s; }
+  .article-card:hover { transform: translateY(-3px); }
+  .val-cat:hover { transform: translateX(4px); }
+
+  /* Кнопки, вкладки, переключатели */
+  .btn { transition: background-color .15s, border-color .15s, color .15s, transform .12s, box-shadow .25s; }
+  .btn:active { transform: translateY(1px) scale(.98); }
+  .btn:not(.ghost):not(.soft):not(.danger):hover { box-shadow: 0 8px 22px color-mix(in srgb, var(--accent) 30%, transparent); }
+  .icon-btn { transition: border-color .15s, transform .12s; }
+  .icon-btn:active { transform: scale(.94); }
+  .chip, .tab, .seg button, .view-switch button { transition: background-color .2s, color .2s, box-shadow .25s, border-color .2s; }
+  .fav-btn { transition: transform .15s, color .2s; }
+  .fav-btn:hover { transform: scale(1.08); }
+  .fav-btn[aria-pressed="true"] svg { animation: q-beat .45s ease; }
+  .action-bar .btn:not(.ghost) { animation: q-ring 1.4s ease-out 2.5s 2; }
+
+  /* Окна, меню, уведомления */
+  .modal-back { animation: q-fade .2s ease both; }
+  .modal { animation: q-sheet-in .34s cubic-bezier(.2, .8, .2, 1) both; }
+  .toast { animation: q-sheet-in .3s cubic-bezier(.2, .8, .2, 1) both; }
+  .mobile-menu { animation: q-fade .2s ease both; }
+  .mobile-menu .panel { animation: q-slide-in .34s cubic-bezier(.2, .8, .2, 1) both; }
+  .filters.open .panel-box { animation: q-sheet-in .32s cubic-bezier(.2, .8, .2, 1) both; }
+  details.qa[open] .a { animation: q-rise .35s ease both; }
+  details.qa summary::after { transition: transform .25s; }
+  .success-state .tick { animation: q-pop .55s cubic-bezier(.2, .8, .2, 1.4) both; }
+  .result-card .big { transition: color .2s; }
+  .leaflet-marker-icon .price-pin { transition: transform .15s; }
+  .leaflet-marker-icon:hover .price-pin { transform: translate(-50%, -100%) scale(1.08); }
+  .admin-nav button { transition: background-color .15s, color .15s; }
+
+  .skel { background: linear-gradient(100deg, var(--surface-2) 30%, color-mix(in srgb, var(--surface-2) 55%, var(--surface)) 50%, var(--surface-2) 70%);
+    background-size: 300% 100%; animation: q-shimmer 1.5s ease-in-out infinite; }
 }
 
 @media (prefers-reduced-motion: reduce) {

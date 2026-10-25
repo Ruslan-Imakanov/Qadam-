@@ -236,7 +236,7 @@ VIEWS.dash = async main => {
   const tgOk = priv.find(p => p.key === 'telegram_bot_token')?.value && priv.find(p => p.key === 'telegram_chat_id')?.value;
   const setup = isAdmin() ? [
     [c.phone && !/000-00-00/.test(c.phone), 'Телефон, WhatsApp и адрес офиса', 'settings'],
-    [settings.company.legal_name && !/укажите/i.test(settings.company.legal_name), 'Название компании и БИН', 'settings'],
+    [settings.company.legal_name && settings.company.bin, 'Юридическое название компании и БИН', 'settings'],
     [tgOk, 'Уведомления о заявках в Telegram', 'settings'],
     [!demoListings, demoListings ? `Удалить демо-объекты (${demoListings}) и добавить свои` : 'Демо-объекты удалены', 'listings'],
     [!(cache.agents || []).some(a => a.is_demo), 'Заменить демо-команду на своих сотрудников', 'team'],
@@ -480,11 +480,11 @@ VIEWS.listings = async main => {
           ${fld('Заголовок', inp('e-title', l.title, 'placeholder="2-комнатная квартира с видом на парк"'), 'w2')}
           ${fld('Вид коммерции', inp('e-ckind', l.commercial_kind, 'placeholder="Офис, склад, магазин…"'))}
           ${fld('Ответственный агент', sel('e-agent', agents.map(a => [a.id, a.full_name]), l.agent_id, 'Не назначен'))}
-          <div class="field w2" style="justify-content:flex-end;flex-direction:row;flex-wrap:wrap;gap:14px">${chk('e-featured', 'Показывать на главной', l.is_featured)}${chk('e-isdemo', 'Демо-объект', l.is_demo)}</div>
+          <div class="field w2 checks-row">${chk('e-featured', 'Показывать на главной', l.is_featured)}${chk('e-isdemo', 'Демо-объект', l.is_demo)}</div>
         </div></div>
         <div class="ed-sec"><span class="eyebrow">Цена и условия</span><div class="ed-grid">
           ${fld('Цена, ₸ (для аренды — в месяц)', inp('e-price', l.price, 'inputmode="numeric"'))}
-          <div class="field w2" style="justify-content:flex-end;flex-direction:row;flex-wrap:wrap;gap:14px">
+          <div class="field w2 checks-row">
             ${chk('e-neg', 'Торг', l.price_negotiable)}${chk('e-mort', 'Ипотека', l.mortgage_ok)}${chk('e-inst', 'Рассрочка', l.installment_ok)}${chk('e-exch', 'Обмен', l.exchange_ok)}${chk('e-pledged', 'В залоге', l.pledged)}${chk('e-new', 'Новостройка', l.is_new_building)}</div>
         </div></div>
         <div class="ed-sec"><span class="eyebrow">Расположение</span><div class="ed-grid">
@@ -535,6 +535,7 @@ VIEWS.listings = async main => {
     const city = () => cmap.get(Number(E('e-city').value));
     makeMap(E('e-map'), { lat: l.lat || city()?.lat || 48, lng: l.lng || city()?.lng || 68, zoom: l.lat ? 15 : 12 }).then(m => {
       mp = m;
+      setTimeout(() => m.map.invalidateSize(), 250);
       const place = (lat, lng) => {
         if (marker) marker.setLatLng([lat, lng]);
         else marker = m.L.marker([lat, lng], { icon: pricePin(m.L, 'здесь') }).addTo(m.map);

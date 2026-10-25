@@ -3,6 +3,9 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#FFFFFF" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#141F23" media="(prefers-color-scheme: dark)">
+<script>try{var t=JSON.parse(localStorage.getItem("qadam-theme"));if(t==="dark"||t==="light")document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
 <meta name="claude:viewport-fit-sides" content="cover">
 <title>Объект · Qadam</title>
 <meta name="description" content="Карточка объекта недвижимости: фото, характеристики, расположение, ипотека и запись на просмотр.">
@@ -29,13 +32,13 @@
 <body data-page="buy">
 <header id="site-header"></header>
 <main>
-  <div class="wrap" id="root"><p class="muted" style="padding-block:40px">Загружаем объект…</p></div>
+  <div class="wrap" id="root"><div class="object-layout" aria-hidden="true"><div class="stack"><div class="skel" style="height:34px;width:60%"></div><div class="skel" style="aspect-ratio:16/10;border-radius:var(--r-lg)"></div></div><div class="stack"><div class="skel" style="height:220px;border-radius:var(--r-lg)"></div><div class="skel" style="height:110px;border-radius:var(--r-lg)"></div></div></div></div>
 </main>
 <footer id="site-footer"></footer>
 
 <script type="module">
 import { boot, db, esc, num, money, moneyShort, link, param, byId, listingCard, listingTitle, listingSpecs, listingBadges, priceLabel, pricePerM2,
-  planSvg, icon, PTYPE, DEAL, favorites, compare, recent, openLead, makeMap, pricePin, waLink, phoneDigits, mortgage, toast, DEMO } from './app.js';
+  planSvg, icon, PTYPE, DEAL, favorites, compare, recent, openLead, makeMap, pricePin, waLink, phoneDigits, mortgage, toast, DEMO, markNav } from './app.js';
 
 boot(async (s) => {
   const root = document.getElementById('root');
@@ -45,7 +48,7 @@ boot(async (s) => {
     root.innerHTML = `<div class="empty" style="margin-block:40px"><h2>Объект не найден</h2><p>Возможно, он снят с продажи. Посмотрите похожие варианты в каталоге.</p><a class="btn" href="catalog.html">Перейти в каталог</a></div>`;
     return;
   }
-  document.body.dataset.page = l.deal_type === 'sale' ? 'buy' : 'rent';
+  markNav(l.deal_type === 'sale' ? 'buy' : 'rent');
   document.title = `${listingTitle(l)} · ${s.company.name}`;
   db.rpc('bump_listing_view', { p_id: l.id }).catch(() => {});
   recent.push(l.id);

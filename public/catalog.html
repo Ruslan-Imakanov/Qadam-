@@ -3,6 +3,9 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#FFFFFF" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#141F23" media="(prefers-color-scheme: dark)">
+<script>try{var t=JSON.parse(localStorage.getItem("qadam-theme"));if(t==="dark"||t==="light")document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
 <meta name="claude:viewport-fit-sides" content="cover">
 <title>Каталог объектов · Qadam</title>
 <meta name="description" content="Квартиры, дома, участки и коммерческая недвижимость в Казахстане: продажа и аренда с фильтрами, картой и избранным.">
@@ -86,7 +89,7 @@
           </div>
         </div>
       </div>
-      <div id="results"><div class="cards" id="cards"></div></div>
+      <div id="results"><div class="cards" id="cards"><div class="card skeleton" aria-hidden="true"><div class="card-media skel"></div><div class="card-body"><div class="skel" style="height:26px;width:62%"></div><div class="skel" style="height:14px;width:40%"></div><div class="skel" style="height:18px;width:90%"></div><div class="skel" style="height:14px;width:75%"></div></div></div><div class="card skeleton" aria-hidden="true"><div class="card-media skel"></div><div class="card-body"><div class="skel" style="height:26px;width:62%"></div><div class="skel" style="height:14px;width:40%"></div><div class="skel" style="height:18px;width:90%"></div><div class="skel" style="height:14px;width:75%"></div></div></div><div class="card skeleton" aria-hidden="true"><div class="card-media skel"></div><div class="card-body"><div class="skel" style="height:26px;width:62%"></div><div class="skel" style="height:14px;width:40%"></div><div class="skel" style="height:18px;width:90%"></div><div class="skel" style="height:14px;width:75%"></div></div></div><div class="card skeleton" aria-hidden="true"><div class="card-media skel"></div><div class="card-body"><div class="skel" style="height:26px;width:62%"></div><div class="skel" style="height:14px;width:40%"></div><div class="skel" style="height:18px;width:90%"></div><div class="skel" style="height:14px;width:75%"></div></div></div><div class="card skeleton" aria-hidden="true"><div class="card-media skel"></div><div class="card-body"><div class="skel" style="height:26px;width:62%"></div><div class="skel" style="height:14px;width:40%"></div><div class="skel" style="height:18px;width:90%"></div><div class="skel" style="height:14px;width:75%"></div></div></div><div class="card skeleton" aria-hidden="true"><div class="card-media skel"></div><div class="card-body"><div class="skel" style="height:26px;width:62%"></div><div class="skel" style="height:14px;width:40%"></div><div class="skel" style="height:18px;width:90%"></div><div class="skel" style="height:14px;width:75%"></div></div></div></div></div>
       <div id="map" class="map-box" hidden></div>
       <div class="row" style="justify-content:center;margin-top:24px"><button class="btn ghost" type="button" id="more" hidden>Показать ещё</button></div>
       <div class="panel-box" style="margin-top:32px">
@@ -101,7 +104,7 @@
 <footer id="site-footer"></footer>
 
 <script type="module">
-import { boot, db, esc, num, link, byId, listingCard, listingTitle, moneyShort, PTYPE, DEAL, session, makeMap, pricePin, openLead, money, plural } from './app.js';
+import { boot, db, esc, num, link, byId, listingCard, listingTitle, moneyShort, PTYPE, DEAL, session, makeMap, pricePin, openLead, money, plural, markNav } from './app.js';
 
 boot(async () => {
   const $ = id => document.getElementById(id);
@@ -153,8 +156,7 @@ boot(async () => {
     document.querySelectorAll('#deal button').forEach(b => b.setAttribute('aria-pressed', b.dataset.v === d));
     const t = d === 'sale' ? 'Купить недвижимость' : d === 'rent' ? 'Снять недвижимость' : 'Посуточная аренда';
     $('title').textContent = t; $('crumb').textContent = t;
-    document.body.dataset.page = d === 'sale' ? 'buy' : 'rent';
-    document.querySelectorAll('.main-nav a, .mobile-menu a').forEach(a => a.removeAttribute('aria-current'));
+    markNav(d === 'sale' ? 'buy' : 'rent');
   }
   setDeal(F.deal);
 

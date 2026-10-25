@@ -3,6 +3,9 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#FFFFFF" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#141F23" media="(prefers-color-scheme: dark)">
+<script>try{var t=JSON.parse(localStorage.getItem("qadam-theme"));if(t==="dark"||t==="light")document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
 <meta name="claude:viewport-fit-sides" content="cover">
 <title>Ипотека и калькуляторы · Qadam</title>
 <meta name="description" content="Ипотечный калькулятор с графиком платежей, расчёт налога при продаже недвижимости по правилам 2026 года, расходы на сделку и доходность аренды.">
@@ -175,7 +178,7 @@
 </main>
 <footer id="site-footer"></footer>
 <script type="module">
-import { boot, db, esc, num, money, moneyShort, link, mortgage, saleTax, dealCosts, rentYield, fmtDateRu } from './app.js';
+import { boot, db, esc, num, money, moneyShort, link, mortgage, saleTax, dealCosts, rentYield, fmtDateRu, animateValue } from './app.js';
 boot(async (s) => {
   const $ = id => document.getElementById(id);
   const n = v => Number(String(v).replace(/\s/g, '').replace(',', '.')) || 0;
@@ -216,7 +219,7 @@ boot(async (s) => {
     const price = n($('m-price').value);
     const r = mortgage({ price, down: price * n($('m-down').value) / 100, rate: n($('m-rate').value), years: n($('m-years').value), type: mType });
     if (!r) { $('m-pay').textContent = '—'; return; }
-    $('m-pay').textContent = money(r.first);
+    animateValue($('m-pay'), r.first, money, 400);
     $('m-range').textContent = mType === 'diff' ? `первый платёж, последний — ${money(r.last)}` : 'одинаковый весь срок';
     const share = r.loan / r.total * 100;
     $('m-bar-p').style.width = share + '%'; $('m-bar-i').style.width = (100 - share) + '%';
@@ -237,7 +240,7 @@ boot(async (s) => {
     const loan = r ? pay * (1 - Math.pow(1 + r, -m)) / r : pay * m;
     const total = loan + n($('a-own').value);
     const minDown = total ? n($('a-own').value) / total * 100 : 0;
-    $('a-total').textContent = money(Math.round(total / 100000) * 100000);
+    animateValue($('a-total'), Math.round(total / 100000) * 100000, v => money(Math.round(v / 1000) * 1000), 400);
     $('a-lines').innerHTML = line('Допустимый платёж', money(pay) + ' / мес') + line('Возможный заём', money(Math.round(loan / 100000) * 100000)) +
       line('Ваш взнос', `${money(n($('a-own').value))} · ${num(minDown, 0)}%`) + (minDown < 20 ? line('Внимание', 'по многим программам взнос от 20%') : '');
     $('a-go').href = link('catalog.html', { deal: 'sale', max: Math.round(total) });
@@ -257,7 +260,7 @@ boot(async (s) => {
     const r = saleTax({ buy: n($('t-buy').value), sell: n($('t-sell').value), regDate: $('t-reg').value, saleDate: $('t-date').value,
       mrp: f.mrp, threshold: f.ipn_threshold_mrp, rate: f.ipn_rate, rateHigh: f.ipn_rate_high });
     if (!r) { $('t-tax').textContent = '—'; return; }
-    $('t-tax').textContent = money(r.tax);
+    animateValue($('t-tax'), r.tax, money, 400);
     $('t-sub').textContent = r.exempt ? `налога нет: срок владения ${r.minYears} ${r.minYears === 1 ? 'год' : 'года'} выдержан` : r.gain ? `продажа раньше ${fmtDateRu(r.exemptFrom.toISOString().slice(0, 10))}` : 'прироста нет — налога нет';
     $('t-lines').innerHTML = line('Прирост стоимости', money(r.gain)) + line('Минимальный срок владения', `${r.minYears} ${r.minYears === 1 ? 'год' : 'года'}`) +
       line('Без налога с даты', fmtDateRu(r.exemptFrom.toISOString().slice(0, 10))) +
@@ -273,7 +276,7 @@ boot(async (s) => {
     const notary = $('c-where').value === 'notary';
     $('c-parties').disabled = !notary;
     const r = dealCosts({ price: n($('c-price').value), notary, parties: $('c-parties').value, spouse: $('c-spouse').checked, mortgageOn: $('c-mort').checked, fast: $('c-fast').checked, commissionPct: n($('c-comm').value) }, f);
-    $('c-total').textContent = money(r.total);
+    animateValue($('c-total'), r.total, money, 400);
     $('c-lines').innerHTML = r.items.map(i => `<div class="line"><span>${esc(i.label)}<span class="xs" style="display:block;opacity:.7">${esc(i.who)}</span></span><b>${money(i.value)}</b></div>`).join('');
   }
   $('c-form').addEventListener('input', calcC); $('c-form').addEventListener('change', calcC); $('c-form').addEventListener('submit', e => e.preventDefault());
@@ -283,7 +286,7 @@ boot(async (s) => {
   function calcY() {
     const r = rentYield({ price: n($('y-price').value), rent: n($('y-rent').value), costs: n($('y-costs').value), vacancy: n($('y-vac').value), taxPct: n($('y-tax').value) });
     if (!r) { $('y-net').textContent = '—'; return; }
-    $('y-net').textContent = num(r.net, 1) + '%';
+    animateValue($('y-net'), r.net, v => num(v, 1) + '%', 400);
     $('y-lines').innerHTML = line('Валовая доходность', num(r.gross, 1) + '%') + line('Чистый доход в год', money(r.netYear)) +
       line('Окупаемость', isFinite(r.payback) ? `${num(r.payback, 1)} лет` : 'не окупается');
   }

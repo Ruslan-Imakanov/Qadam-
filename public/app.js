@@ -340,6 +340,26 @@ export function moneyShort(n) {
   if (v >= 1e3) return num(v / 1e3, 0) + ' тыс';
   return num(v);
 }
+/** Плавно «докрутить» число в элементе до нового значения (итоги калькуляторов, счётчики) */
+export function animateValue(el, to, fmt = v => num(Math.round(v)), duration = 600) {
+  if (!el) return;
+  const from = Number(el.dataset.v ?? 0);
+  el.dataset.v = to;
+  cancelAnimationFrame(el._raf);
+  if (!isFinite(to) || from === to || matchMedia('(prefers-reduced-motion: reduce)').matches) { el.textContent = fmt(to); return; }
+  const t0 = performance.now();
+  const step = t => {
+    const k = Math.min(1, (t - t0) / duration);
+    el.textContent = fmt(from + (to - from) * (1 - Math.pow(1 - k, 3)));
+    if (k < 1) el._raf = requestAnimationFrame(step);
+  };
+  el._raf = requestAnimationFrame(step);
+}
+export function skeletonCards(n = 3) {
+  return Array.from({ length: n }, () => `<div class="card skeleton" aria-hidden="true"><div class="card-media skel"></div>
+    <div class="card-body"><div class="skel" style="height:26px;width:62%"></div><div class="skel" style="height:14px;width:40%"></div>
+    <div class="skel" style="height:18px;width:90%"></div><div class="skel" style="height:14px;width:75%"></div></div></div>`).join('');
+}
 export function plural(n, [one, few, many]) {
   const a = Math.abs(n) % 100, b = a % 10;
   if (a > 10 && a < 20) return many;
@@ -365,12 +385,16 @@ export function fmtDateLong(v) {
   return isNaN(d) ? '' : d.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' });
 }
 export function phoneDigits(p) { return String(p || '').replace(/\D/g, ''); }
-export function formatPhone(p) {
+/** 11 цифр 7XXXXXXXXXX или '' — принимает +7…, 8…, и номер без кода страны (701 222 33 44) */
+export function normalizePhone(p) {
   let d = phoneDigits(p);
   if (d.length === 11 && d[0] === '8') d = '7' + d.slice(1);
   if (d.length === 10) d = '7' + d;
-  if (d.length !== 11) return p || '';
-  return `+${d[0]} (${d.slice(1, 4)}) ${d.slice(4, 7)}-${d.slice(7, 9)}-${d.slice(9)}`;
+  return d.length === 11 && d[0] === '7' ? d : '';
+}
+export function formatPhone(p) {
+  const d = normalizePhone(p);
+  return d ? `+7 (${d.slice(1, 4)}) ${d.slice(4, 7)}-${d.slice(7, 9)}-${d.slice(9)}` : (p || '');
 }
 export function waLink(digits, text = '') {
   const d = phoneDigits(digits);
@@ -672,20 +696,31 @@ export function openModal(html, { wide = false, onClose } = {}) {
 // Форма заявки — одна на весь сайт
 // ============================================================
 export function phoneInput(el) {
-  el.addEventListener('input', () => {
-    let d = phoneDigits(el.value);
-    if (d[0] === '8') d = '7' + d.slice(1);
-    if (d && d[0] !== '7') d = '7' + d;
-    d = d.slice(0, 11);
+  const mask = d => {
     let out = d ? '+7' : '';
     if (d.length > 1) out += ' (' + d.slice(1, 4);
     if (d.length >= 4) out += ') ' + d.slice(4, 7);
     if (d.length >= 7) out += '-' + d.slice(7, 9);
     if (d.length >= 9) out += '-' + d.slice(9, 11);
-    el.value = out;
+    return out;
+  };
+  let prev = '';
+  el.addEventListener('input', e => {
+    let d = phoneDigits(el.value);
+    // Стёрли скобку или дефис — стираем и цифру перед ними, иначе маска вернёт символ обратно
+    if (e.inputType === 'deleteContentBackward' && d === prev) d = d.slice(0, -1);
+    if (d[0] === '8') d = '7' + d.slice(1);
+    if (d && d[0] !== '7') d = '7' + d;
+    // «70…» после кода страны не бывает — это номер без кода (701 222 33 44)
+    else if (d[1] === '0') d = '7' + d;
+    d = d.slice(0, 11);
+    prev = d;
+    el.value = mask(d);
   });
+  // Номер без кода страны с 74…/75…/77… дописывается до полного при выходе из поля
+  el.addEventListener('blur', () => { const n = normalizePhone(el.value); if (n) { prev = n; el.value = formatPhone(n); } });
 }
-export function validPhone(v) { return phoneDigits(v).length === 11; }
+export function validPhone(v) { return !!normalizePhone(v); }
 
 /**
  * openLead({ kind, title, subtitle, listing, service_id, payload, message, fields })
@@ -787,13 +822,14 @@ const NAV = [
   ['sell', 'sell.html', 'Продать'],
   ['valuation', 'valuation.html', 'Оценка'],
   ['services', 'services.html', 'Услуги'],
-  ['calc', 'calculators.html', 'Ипотека и расчёты'],
+  ['calc', 'calculators.html', 'Ипотека'],
   ['guide', 'guide.html', 'Полезное'],
   ['about', 'about.html', 'Контакты']
 ];
+// Тема: сохранённый выбор ставится ещё в <head> (строка в каждой странице), здесь — только переключатель.
+// Атрибут без сохранённого выбора не трогаем: его может выставить окно предпросмотра.
 export function applyTheme(theme) {
-  if (theme) document.documentElement.setAttribute('data-theme', theme);
-  else document.documentElement.removeAttribute('data-theme');
+  if (theme === 'dark' || theme === 'light') document.documentElement.setAttribute('data-theme', theme);
 }
 function currentTheme() {
   const t = document.documentElement.getAttribute('data-theme');
@@ -803,30 +839,47 @@ function currentTheme() {
 applyTheme(store.get('qadam-theme'));
 export function toggleTheme() {
   const next = currentTheme() === 'dark' ? 'light' : 'dark';
-  applyTheme(next); store.set('qadam-theme', next);
-  document.querySelectorAll('[data-theme-toggle]').forEach(b => { b.innerHTML = icon(next === 'dark' ? 'sun' : 'moon'); });
+  const swap = () => {
+    applyTheme(next); store.set('qadam-theme', next);
+    document.querySelectorAll('[data-theme-toggle]').forEach(b => { b.innerHTML = icon(next === 'dark' ? 'sun' : 'moon'); });
+  };
+  if (document.startViewTransition && !matchMedia('(prefers-reduced-motion: reduce)').matches) document.startViewTransition(swap);
+  else swap();
 }
 
-export async function mountLayout() {
-  const page = document.body.dataset.page || '';
-  const s = await getSettings();
+// Шапка, подвал и нижняя панель рисуются сразу (из настроек, сохранённых на прошлой странице),
+// чтобы при переходах между страницами ничего не прыгало, а после загрузки — обновляются.
+function renderChrome(page, s) {
   const c = s.contacts, co = s.company;
   const phone = c.phone || '';
-  const tel = phoneDigits(phone) ? `tel:+${phoneDigits(phone)}` : '#';
+  const tel = phoneDigits(phone) ? `tel:+${phoneDigits(phone)}` : '';
   const wa = waLink(c.whatsapp, 'Здравствуйте! Пишу с сайта.');
+  const tg = c.telegram ? `https://t.me/${c.telegram.replace(/^@/, '')}` : '';
   const navHtml = NAV.map(([key, href, label]) => `<a href="${href}" ${key === page ? 'aria-current="page"' : ''}>${label}</a>`).join('');
   const header = document.getElementById('site-header');
   if (header) {
+    document.querySelectorAll('.demo-ribbon, .topbar').forEach(el => el.remove());
+    if (DEMO && !store.get('qadam-demo-note')) {
+      header.insertAdjacentHTML('beforebegin', `<div class="demo-ribbon"><div class="wrap">
+        <span>Демонстрационная версия: объекты, цены и контакты на сайте — примеры.</span>
+        <button type="button" data-demo-close aria-label="Скрыть">✕</button></div></div>`);
+    }
+    header.insertAdjacentHTML('beforebegin', `<div class="topbar"><div class="wrap">
+      <div class="group">${c.city ? `<span>${icon('pin')} ${esc(c.city)}</span>` : ''}${c.hours ? `<span>${icon('clock')} ${esc(c.hours)}</span>` : ''}</div>
+      <div class="group">
+        ${wa ? `<a href="${wa}" target="_blank" rel="noopener">${icon('whatsapp')} WhatsApp</a>` : ''}
+        ${tg ? `<a href="${esc(tg)}" target="_blank" rel="noopener">${icon('telegram')} Telegram</a>` : ''}
+        ${c.email ? `<a href="mailto:${esc(c.email)}">${icon('mail')} ${esc(c.email)}</a>` : ''}
+        ${phone ? `<span class="sep" aria-hidden="true"></span><a class="tel" href="${tel}">${icon('phone')} ${esc(phone)}</a>` : ''}
+      </div></div></div>`);
     header.className = 'site-header';
-    header.innerHTML = `${DEMO ? '<div class="demo-ribbon">Демо-режим: база не подключена, данные — примеры. Подключение — в config.js</div>' : ''}
-      <div class="wrap bar">
+    header.innerHTML = `<div class="wrap bar">
         <a class="logo" href="index.html">${logoMark()}<span><span class="logo-name">${esc(co.name)}</span><span class="logo-sub">${esc(co.tagline || '')}</span></span></a>
         <nav class="main-nav" aria-label="Разделы">${navHtml}</nav>
         <div class="header-tools">
-          ${phone ? `<a class="header-phone" href="${tel}"><b>${esc(phone)}</b><span>${esc(c.hours || '')}</span></a>` : ''}
           <a class="icon-btn" href="favorites.html" aria-label="Избранное">${icon('heart')}<span class="count" data-fav-count hidden>0</span></a>
           <button class="icon-btn" type="button" data-theme-toggle aria-label="Сменить тему">${icon(currentTheme() === 'dark' ? 'sun' : 'moon')}</button>
-          <button class="btn sm" type="button" data-lead="callback" data-title="Перезвоните мне">Заявка</button>
+          <button class="btn sm" type="button" data-lead="callback" data-title="Перезвоните мне">Обратный звонок</button>
           <button class="icon-btn burger" type="button" data-burger aria-label="Меню">${icon('menu')}</button>
         </div>
       </div>`;
@@ -841,7 +894,7 @@ export async function mountLayout() {
           <p class="small muted" style="max-width:40ch">${esc(co.slogan || '')}</p>
           <div class="row">
             ${wa ? `<a class="icon-btn" href="${wa}" target="_blank" rel="noopener" aria-label="WhatsApp">${icon('whatsapp')}</a>` : ''}
-            ${c.telegram ? `<a class="icon-btn" href="https://t.me/${esc(c.telegram.replace(/^@/, ''))}" target="_blank" rel="noopener" aria-label="Telegram">${icon('telegram')}</a>` : ''}
+            ${tg ? `<a class="icon-btn" href="${esc(tg)}" target="_blank" rel="noopener" aria-label="Telegram">${icon('telegram')}</a>` : ''}
             ${c.instagram ? `<a class="icon-btn" href="https://instagram.com/${esc(c.instagram.replace(/^@/, ''))}" target="_blank" rel="noopener" aria-label="Instagram">${icon('instagram')}</a>` : ''}
           </div>
         </div>
@@ -873,29 +926,51 @@ export async function mountLayout() {
       </div>
     </div>`;
   }
-  if (!document.querySelector('.action-bar') && page !== 'admin') {
+  if (page !== 'admin') {
+    document.querySelector('.action-bar')?.remove();
     const bar = document.createElement('div');
     bar.className = 'action-bar';
-    bar.innerHTML = `<a class="btn ghost" href="${tel}">${icon('phone')} Позвонить</a>
-      ${wa ? `<a class="btn ghost" href="${wa}" target="_blank" rel="noopener">${icon('whatsapp')} WhatsApp</a>` : '<a class="btn ghost" href="about.html">Контакты</a>'}
+    bar.innerHTML = `${tel ? `<a class="btn ghost" href="${tel}">${icon('phone')} Позвонить</a>` : '<a class="btn ghost" href="about.html">Контакты</a>'}
+      ${wa ? `<a class="btn ghost" href="${wa}" target="_blank" rel="noopener">${icon('whatsapp')} WhatsApp</a>` : '<a class="btn ghost" href="catalog.html">Каталог</a>'}
       <button class="btn" type="button" data-lead="callback" data-title="Перезвоните мне">Заявка</button>`;
     document.body.append(bar);
   }
+  updateCounters();
+}
+
+/** Подсветить пункт меню, когда раздел определяется уже после загрузки данных (каталог, объект) */
+export function markNav(key) {
+  document.body.dataset.page = key;
+  const href = NAV.find(n => n[0] === key)?.[1];
+  document.querySelectorAll('.main-nav a, .mobile-menu a').forEach(a => {
+    if (a.getAttribute('href') === href) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current');
+  });
+}
+
+export async function mountLayout() {
+  const page = document.body.dataset.page || '';
+  const cached = session.get('qadam-settings');
+  renderChrome(page, cached || SETTINGS_DEFAULTS);
   document.addEventListener('click', e => {
     if (e.target.closest('[data-theme-toggle]')) toggleTheme();
-    if (e.target.closest('[data-burger]')) openMobileMenu(page, phone, tel);
+    if (e.target.closest('[data-burger]')) openMobileMenu(page);
+    if (e.target.closest('[data-demo-close]')) { store.set('qadam-demo-note', 1); e.target.closest('.demo-ribbon').remove(); }
   });
-  updateCounters();
+  const s = await getSettings();
+  if (JSON.stringify(s) !== JSON.stringify(cached)) { session.set('qadam-settings', s); renderChrome(page, s); }
   return s;
 }
-function openMobileMenu(page, phone, tel) {
+function openMobileMenu(page) {
+  const s = session.get('qadam-settings') || SETTINGS_DEFAULTS;
+  const phone = s.contacts.phone || '';
+  const tel = phoneDigits(phone) ? `tel:+${phoneDigits(phone)}` : '';
   const m = document.createElement('div');
   m.className = 'mobile-menu';
   m.innerHTML = `<div class="panel">
     <div class="row between" style="margin-bottom:8px"><span class="eyebrow">Меню</span><button class="icon-btn" type="button" data-x aria-label="Закрыть">${icon('close')}</button></div>
     ${NAV.map(([key, href, label]) => `<a class="nav-item" href="${href}" ${key === page ? 'aria-current="page"' : ''}>${label}</a>`).join('')}
     <a class="nav-item" href="favorites.html">Избранное и сравнение</a>
-    ${phone ? `<a class="btn ghost block" style="margin-top:16px" href="${tel}">${icon('phone')} ${esc(phone)}</a>` : ''}
+    ${tel ? `<a class="btn ghost block" style="margin-top:16px" href="${tel}">${icon('phone')} ${esc(phone)}</a>` : ''}
   </div>`;
   m.addEventListener('click', e => { if (e.target === m || e.target.closest('[data-x]')) m.remove(); });
   document.body.append(m);
