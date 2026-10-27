@@ -5,6 +5,8 @@
 (аккаунт `3257b22ca5a38019c74864b01be83b81`), статические файлы из `public/`, код воркера — `worker.js`.
 Выкладка — через коннектор Cloudflare (mcp.cloudflare.com, нужны права Workers Scripts Write) и `tools/cf-deploy.mjs`,
 порядок шагов — в README («Хостинг»). Netlify для этого проекта не нужен и не используется.
+При выкладке воркера обязателен `compatibility_flags: ["assets_navigation_has_no_effect"]`, иначе браузер на «/» видит 404.
+Проверять живой сайт с заголовком `Sec-Fetch-Mode: navigate` (как браузер), а не голым curl.
 Автоматические переходы между страницами (`@view-transition`) не включать: на хостинге Chrome их отменяет с ошибкой в консоли.
 
 ## Стек и правила

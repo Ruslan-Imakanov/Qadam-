@@ -2,6 +2,8 @@
 // а короткие адреса (/catalog) и корень (/) показывают нужную страницу без перенаправления.
 // Выкладывается как Cloudflare Worker «qadam-realty» со статическими файлами из public/
 // (html_handling: "none", not_found_handling: "404-page", заголовки — из public/_headers).
+// compatibility_flags: ["assets_navigation_has_no_effect"] — обязательно: без него Cloudflare отвечает на переходы
+// браузера («/», «/catalog») сам, не вызывая воркер, и показывает 404.html.
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
